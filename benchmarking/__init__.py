@@ -23,11 +23,10 @@ def main(reporter=None):
 
     if reporter is None:
         from .reporters import TextReporter, CsvReporter, CodeSpeedReporter, MultiReporter
-        r1 = TextReporter(min_only=False)
-        r2 = CodeSpeedReporter('http://localhost:8000', less_is_better=True,  project='Test Time Project',  commitid=123, environment='test')
-        r3 = CodeSpeedReporter('http://localhost:8000', less_is_better=False, project='Test Speed Project', commitid=123, environment='test')
-        r4 = CsvReporter()
-        reporter = MultiReporter([r1, r2, r3, r4])
+        r1 = TextReporter(min_only=True)
+        r2 = CodeSpeedReporter('http://localhost:8000', project='Test Project',  commitid=123, environment='test')
+        r3 = CsvReporter()
+        reporter = MultiReporter([r1, r2, r3])
 
     from .runner import BenchmarkRunner
     runner = BenchmarkRunner(reporter=reporter)
