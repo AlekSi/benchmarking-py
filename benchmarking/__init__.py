@@ -1,7 +1,9 @@
-from .case import BenchmarkCase
-from .decorators import runs, seconds, repeats
+from __future__ import division, print_function, absolute_import
 
-__all__ = ('BenchmarkCase', 'runs', 'seconds', 'repeats')
+from .case import BenchmarkCase
+from .decorators import calls, seconds, repeats
+
+__all__ = ['BenchmarkCase', 'calls', 'seconds', 'repeats']
 
 import platform
 if platform.python_version_tuple()[0] == '3':
@@ -9,6 +11,7 @@ if platform.python_version_tuple()[0] == '3':
     xrange = range
 else:
     _is_py3k = False
+
 
 def main(reporter=None):
     """
@@ -19,10 +22,11 @@ def main(reporter=None):
 
     if reporter is None:
         from .reporters import TextReporter, CsvReporter, CodeSpeedReporter, MultiReporter
-        r1 = TextReporter()
-        r2 = CodeSpeedReporter('http://localhost:8000', project='Test Project', commitid=123)
-        # r3 = CsvReporter()
-        reporter = MultiReporter([r1, r2])
+        r1 = TextReporter(min_only=False)
+        r2 = CodeSpeedReporter('http://localhost:8000', less_is_better=True,  project='Test Time Project',  commitid=123, environment='test')
+        r3 = CodeSpeedReporter('http://localhost:8000', less_is_better=False, project='Test Speed Project', commitid=123, environment='test')
+        r4 = CsvReporter()
+        reporter = MultiReporter([r1, r2, r3, r4])
 
     from .runner import BenchmarkRunner
     runner = BenchmarkRunner(reporter=reporter)
