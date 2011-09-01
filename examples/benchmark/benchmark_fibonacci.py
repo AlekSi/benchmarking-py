@@ -17,10 +17,10 @@ class FibonacciBenchmarkCase(benchmarking.BenchmarkCase):
     def benchmark_recursive_memo(self):
         FibonacciRecursiveMemo().get(self.N)
 
-    @benchmarking.seconds(5)
+    @benchmarking.seconds(1)
     def benchmark_iterational(self):
         FibonacciIterational().get(self.N)
 
-    @benchmarking.seconds(5)
+    @benchmarking.seconds(2)
     def benchmark_matrix(self):
         FibonacciMatrix().get(self.N)
