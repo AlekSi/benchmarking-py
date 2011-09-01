@@ -5,7 +5,7 @@ import timeit
 
 from .suite import BenchmarkSuite
 from .decorators import _get_metainfo
-from . import _is_py3k
+from . import _is_py3k, _range
 
 
 class BenchmarkRunner(object):
@@ -45,8 +45,7 @@ class BenchmarkRunner(object):
             if prev_time <= time < (max_seconds * 0.9):
                 calls = int(max_seconds / time * calls)
             else:
-                break
-        return calls
+                return calls
 
     def run_benchmark(self, method):
         setup = 'pass' if self.disable_gc else 'gc.enable()'
@@ -56,7 +55,7 @@ class BenchmarkRunner(object):
         method_name = self._method_name(method)
 
         res = []
-        for n in xrange(repeats):
+        for n in _range(repeats):
             self.reporter.before_repeat(method_name, n + 1, repeats)
             result = self.run_repeat(method, setup, calls)
             res.append(result)
