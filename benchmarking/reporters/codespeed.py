@@ -16,7 +16,7 @@ class CodeSpeedReporter(Reporter):
         try:
             from codespeed_client import Client
         except ImportError as e:
-            msg = e.message + '\n\nPlease install codespeed_client package: pip install codespeed_client'
+            msg = str(e) + '\n\nPlease install codespeed_client package: pip install codespeed_client'
             raise ImportError(msg)
 
         self.client = Client(root_url, **kwargs)

@@ -3,6 +3,10 @@ import unittest
 from examples.fibonacci import FibonacciRecursive, FibonacciRecursiveMemo, FibonacciIterational, \
                                FibonacciMatrix
 
+import platform
+if platform.python_version_tuple()[0] == '3':
+    xrange = range
+
 
 class FibonacciTestCase(unittest.TestCase):
     @classmethod
