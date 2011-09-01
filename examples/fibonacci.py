@@ -11,7 +11,7 @@ class FibonacciRecursive(object):
     def get(self, n):
         if n < 2:
             return n
-        return self.get(n-1) + self.get(n-2)
+        return self.get(n - 1) + self.get(n - 2)
 
 
 class FibonacciRecursiveMemo(object):
@@ -22,7 +22,7 @@ class FibonacciRecursiveMemo(object):
 
     def get(self, n):
         if n not in self.memo:
-            self.memo[n] = self.get(n-1) + self.get(n-2)
+            self.memo[n] = self.get(n - 1) + self.get(n - 2)
         return self.memo[n]
 
 
@@ -43,18 +43,18 @@ class FibonacciMatrix(object):
     def mul(A, B):
         a, b, c = A
         d, e, f = B
-        return a*d + b*e, a*e + b*f, b*e + c*f
+        return a * d + b * e, a * e + b * f, b * e + c * f
 
     @classmethod
     def pow(cls, A, n):
         if n == 1:
             return A
         elif n & 1 == 0:
-            return cls.pow(cls.mul(A, A), n//2)
+            return cls.pow(cls.mul(A, A), n // 2)
         else:
-            return cls.mul(A, cls.pow(cls.mul(A, A), (n-1)//2))
+            return cls.mul(A, cls.pow(cls.mul(A, A), (n - 1) // 2))
 
     def get(self, n):
         if n < 2:
             return n
-        return self.pow((1,1,0), n-1)[0]
+        return self.pow((1, 1, 0), n - 1)[0]
