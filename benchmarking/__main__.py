@@ -30,7 +30,7 @@ for module in args:
     __import__(module)
 
 if options.reporter is None:
-    options.reporter = ['Text']
+    options.reporter = ['Value']
 
 reporters = []
 for reporter in options.reporter:

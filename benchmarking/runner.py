@@ -65,7 +65,7 @@ class BenchmarkRunner(object):
 
     def run(self):
         """
-        @returns: C{False} if there were exceptions
+        @returns: result of L{after_run}
         """
         for klass in BenchmarkSuite.collect_classes():
             klass.setUpClass()
@@ -86,4 +86,4 @@ class BenchmarkRunner(object):
 
             klass.tearDownClass()
 
-        self.reporter.after_run()
+        return self.reporter.after_run()

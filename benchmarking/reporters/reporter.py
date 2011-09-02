@@ -3,9 +3,7 @@ from __future__ import division, print_function, absolute_import
 
 class Reporter(object):
     """
-    Reporter interface / null reporter.
-
-    Result values are ignored.
+    Interface for other reporters; also contains common methods for them.
     """
 
     @classmethod
@@ -42,7 +40,7 @@ class Reporter(object):
         @param current: number of current repeat
         @param total: total number of repeats
         @param calls: number of calls per repeat
-        @param result: number of seconds
+        @param result: number of seconds for current repeat
         """
         pass
 

@@ -11,11 +11,13 @@ def main(reporter=None):
     Use it like this:
         if __name__ == '__main__':
             benchmarking.main()
+
+    @returns: value of L{BenchmarkRunner.run()}
     """
 
     if reporter is None:
-        from .reporters import TextReporter
-        reporter = TextReporter()
+        from .reporters import ValueReporter
+        reporter = ValueReporter()
 
     from .runner import BenchmarkRunner
     runner = BenchmarkRunner(reporter=reporter)

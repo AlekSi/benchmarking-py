@@ -13,4 +13,4 @@ pep8:
 	pep8 --ignore=E501,E241 --repeat --statistics benchmarking examples
 
 benchmark:
-	python -m benchmarking examples.benchmark.benchmark_fibonacci
+	python -m benchmarking --reporter=Text examples.benchmark.benchmark_fibonacci
