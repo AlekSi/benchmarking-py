@@ -1,11 +1,15 @@
 from __future__ import division, print_function, absolute_import
 
+import sys
 import gc
 import timeit
 
 from .suite import BenchmarkSuite
 from .decorators import _get_metainfo
-from . import _is_py3k, _range
+
+
+if sys.version_info.major < 3:
+    range = xrange
 
 
 class BenchmarkRunner(object):
@@ -17,11 +21,8 @@ class BenchmarkRunner(object):
 
     @staticmethod
     def _method_name(method):
-        if _is_py3k:
-            _im_class = method.__self__.__class__
-        else:
-            _im_class = method.im_class
-        return '%s.%s' % (_im_class.__name__, method.__name__)
+        klass = method.__self__.__class__
+        return '%s.%s' % (klass.__name__, method.__name__)
 
     @staticmethod
     def run_repeat(method, setup, calls):
@@ -55,7 +56,7 @@ class BenchmarkRunner(object):
         method_name = self._method_name(method)
 
         res = []
-        for n in _range(repeats):
+        for n in range(repeats):
             self.reporter.before_repeat(method_name, n + 1, repeats)
             result = self.run_repeat(method, setup, calls)
             res.append(result)
@@ -66,14 +67,10 @@ class BenchmarkRunner(object):
         """
         @returns: C{False} if there were exceptions
         """
-        classes = BenchmarkSuite.collect_classes()
-
-        for klass in classes:
+        for klass in BenchmarkSuite.collect_classes():
             klass.setUpClass()
 
-            method_names = BenchmarkSuite.collect_method_names(klass)
-
-            for method_name in method_names:
+            for method_name in BenchmarkSuite.collect_method_names(klass):
                 instance = klass()
                 instance.setUp()
 

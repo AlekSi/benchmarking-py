@@ -5,14 +5,6 @@ from .decorators import calls, seconds, repeats
 
 __all__ = ['BenchmarkCase', 'calls', 'seconds', 'repeats']
 
-import sys
-if sys.version_info.major == 3:
-    _is_py3k = True
-    _range = range
-else:
-    _is_py3k = False
-    _range = xrange
-
 
 def main(reporter=None):
     """
