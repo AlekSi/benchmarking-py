@@ -26,9 +26,10 @@ class Reporter(object):
     def speeds(calls, results):
         return [calls / time for time in results]
 
-    def before_repeat(self, method_name, current, total):
+    def before_repeat(self, method_name, data, current, total):
         """
         @param method_name: benchmark method name
+        @param data: benchmark method argument
         @param current: number of current repeat
         @param total: total number of repeats
         """
@@ -36,9 +37,10 @@ class Reporter(object):
         assert isinstance(current, int)
         assert isinstance(total, int)
 
-    def after_repeat(self, method_name, current, total, calls, result):
+    def after_repeat(self, method_name, data, current, total, calls, result):
         """
         @param method_name: benchmark method name
+        @param data: benchmark method argument
         @param current: number of current repeat
         @param total: total number of repeats
         @param calls: number of calls per repeat
@@ -50,15 +52,17 @@ class Reporter(object):
         assert isinstance(calls, int)
         assert isinstance(result, float)
 
-    def before_benchmark(self, method_name):
+    def before_benchmark(self, method_name, data):
         """
         @param method_name: benchmark method name
+        @param data: benchmark method argument
         """
         assert isinstance(method_name, str)
 
-    def after_benchmark(self, method_name, calls, results):
+    def after_benchmark(self, method_name, data, calls, results):
         """
         @param method_name: benchmark method name
+        @param data: benchmark method argument
         @param calls: number of benchmark method calls per repeat
         @param results: number of seconds per each repeat
         @type results: C{list}

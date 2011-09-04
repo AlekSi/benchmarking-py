@@ -4,6 +4,7 @@ import sys
 import gc
 import time
 
+from .reporters import _no_data
 from .suite import BenchmarkSuite
 from .decorators import _get_metainfo
 
@@ -73,10 +74,10 @@ class BenchmarkRunner(object):
 
         res = []
         for n in range(repeats):
-            self.reporter.before_repeat(method_name, n + 1, repeats)
+            self.reporter.before_repeat(method_name, _no_data, n + 1, repeats)
             result = self.run_repeat(method, calls)
             res.append(result)
-            self.reporter.after_repeat(method_name, n + 1, repeats, calls, result)
+            self.reporter.after_repeat(method_name, _no_data, n + 1, repeats, calls, result)
         return (calls, res)
 
     def run(self):
@@ -93,9 +94,9 @@ class BenchmarkRunner(object):
                 method = getattr(instance, method_name)
                 method_name = self._method_name(method)
 
-                self.reporter.before_benchmark(method_name)
+                self.reporter.before_benchmark(method_name, _no_data)
                 calls, total = self.run_benchmark(method)
-                self.reporter.after_benchmark(method_name, calls, total)
+                self.reporter.after_benchmark(method_name, _no_data, calls, total)
 
                 instance.tearDown()
                 del instance
