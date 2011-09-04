@@ -10,7 +10,7 @@ all_reporters = ReporterFactory.all_reporters()
 
 parser = OptionParser(usage='%prog [options] [benchmark modules]')
 parser.add_option("--reporter", help="Reporter to use, may be given several times. Available reporters: %s" % ', '.join(all_reporters),
-                  action="append", type="choice", choices=all_reporters)
+                  action="append", type="choice", choices=all_reporters + ['_test'])
 parser.add_option('--more-is-better', help='Report speed, not time per call.', action='store_true', default=False)
 parser.add_option('--revision', help='SCM revision number or commit ID', metavar='ID')
 parser.add_option('--branch', help='SCM branch')

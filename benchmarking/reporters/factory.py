@@ -14,6 +14,9 @@ class ReporterFactory(object):
     def by_name(name, **kwargs):
         """Creates new reporter."""
 
+        if name == '_test':
+            return Reporter()
+
         for reporter in Reporter.__subclasses__():
             if reporter.name().lower() == name.lower():
                 return reporter(**kwargs)
