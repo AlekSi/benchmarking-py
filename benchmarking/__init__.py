@@ -1,9 +1,13 @@
 from __future__ import division, print_function, absolute_import
 
 from .case import BenchmarkCase
-from .decorators import calls, seconds, repeats
+from .decorators import calls, seconds, repeats, data, data_function
 
-__all__ = ['BenchmarkCase', 'calls', 'seconds', 'repeats']
+no_data = object()
+
+__all__ = ['BenchmarkCase',
+           'calls', 'seconds', 'repeats', 'data', 'data_function',
+           'no_data']
 
 
 def main(reporter=None):

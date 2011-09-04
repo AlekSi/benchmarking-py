@@ -33,3 +33,21 @@ def repeats(number):
         _set_metainfo(method, 'repeats', number)
         return method
     return f
+
+
+def data(*args):
+    """Specifies data arguments for benchmark."""
+
+    def f(method):
+        _set_metainfo(method, 'data_function', lambda: args)
+        return method
+    return f
+
+
+def data_function(func):
+    """Specifies data function for benchmark."""
+
+    def f(method):
+        _set_metainfo(method, 'data_function', func)
+        return method
+    return f
