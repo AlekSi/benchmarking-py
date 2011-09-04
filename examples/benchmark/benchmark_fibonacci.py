@@ -5,22 +5,22 @@ from examples.fibonacci import FibonacciRecursive, FibonacciRecursiveMemo, Fibon
 
 
 class FibonacciBenchmarkCase(benchmarking.BenchmarkCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.N = 20
-
     @benchmarking.calls(500)
-    def benchmark_recursive(self):
-        FibonacciRecursive().get(self.N)
+    @benchmarking.data(20)
+    def benchmark_recursive(self, n):
+        FibonacciRecursive().get(n)
 
     @benchmarking.repeats(3)
-    def benchmark_recursive_memo(self):
-        FibonacciRecursiveMemo().get(self.N)
+    @benchmarking.data(20)
+    def benchmark_recursive_memo(self, n):
+        FibonacciRecursiveMemo().get(n)
 
     @benchmarking.seconds(1)
-    def benchmark_iterational(self):
-        FibonacciIterational().get(self.N)
+    @benchmarking.data(5, 10, 20)
+    def benchmark_iterational(self, n):
+        FibonacciIterational().get(n)
 
     @benchmarking.seconds(2)
-    def benchmark_matrix(self):
-        FibonacciMatrix().get(self.N)
+    @benchmarking.data(20)
+    def benchmark_matrix(self, n):
+        FibonacciMatrix().get(n)

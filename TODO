@@ -1,4 +1,4 @@
-investigate function call overhead in timeit
-profile mode
+investigate function call overhead
+profile mode (??)
 Class decorators
 Decorators: skip, skipIf, skipUnless, expectedFailure
