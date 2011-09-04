@@ -32,7 +32,9 @@ class Reporter(object):
         @param current: number of current repeat
         @param total: total number of repeats
         """
-        pass
+        assert isinstance(method_name, str)
+        assert isinstance(current, int)
+        assert isinstance(total, int)
 
     def after_repeat(self, method_name, current, total, calls, result):
         """
@@ -42,13 +44,17 @@ class Reporter(object):
         @param calls: number of calls per repeat
         @param result: number of seconds for current repeat
         """
-        pass
+        assert isinstance(method_name, str)
+        assert isinstance(current, int)
+        assert isinstance(total, int)
+        assert isinstance(calls, int)
+        assert isinstance(result, float)
 
     def before_benchmark(self, method_name):
         """
         @param method_name: benchmark method name
         """
-        pass
+        assert isinstance(method_name, str)
 
     def after_benchmark(self, method_name, calls, results):
         """
@@ -57,7 +63,11 @@ class Reporter(object):
         @param results: number of seconds per each repeat
         @type results: C{list}
         """
-        pass
+        assert isinstance(method_name, str)
+        assert isinstance(calls, int)
+        assert isinstance(results, list)
+        for i in results:
+            assert isinstance(i, float)
 
     def after_run(self):
         pass
