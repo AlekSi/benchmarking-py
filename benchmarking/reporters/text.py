@@ -1,8 +1,15 @@
 from __future__ import division, print_function, absolute_import
 
 import sys
+import repr as reprlib
 
 from .reporter import Reporter
+
+
+r = reprlib.Repr()
+r.maxlevel = 2
+r.maxother = 60
+repr = r.repr
 
 
 class TextReporter(Reporter):
@@ -19,7 +26,7 @@ class TextReporter(Reporter):
         print(result)
 
     def before_benchmark(self, method_name, data):
-        print('%s(%s)' % (method_name, data), end=':\n')
+        print('%s(%s)' % (method_name, repr(data)), end=':\n')
         sys.stdout.flush()
 
     def after_benchmark(self, method_name, data, calls, results):
