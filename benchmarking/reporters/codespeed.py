@@ -36,8 +36,16 @@ class CodeSpeedReporter(Reporter):
         self.client.add_result(project=project, benchmark=benchmark, result_value=value, min=min_value, max=max_value)
 
     def after_run(self):
+        from codespeed_client import UploadError
+
         if self.verbose:
             print("Uploading %d results to %s... " % (len(self.client.data), self.client.url), end='', file=sys.stderr)
-        code, body = self.client.upload_results()
-        if self.verbose:
-            print("%s - %s" % (code, body), file=sys.stderr)
+
+        try:
+            code, body = self.client.upload_results()
+        except UploadError as e:
+            code, body = e.errno, e.strerror
+            raise
+        finally:
+            if self.verbose:
+                print("%s - %s" % (code, body), file=sys.stderr)
