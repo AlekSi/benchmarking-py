@@ -9,11 +9,4 @@ from .csv import CsvReporter
 from .codespeed import CodeSpeedReporter
 
 
-class NoData(object):
-    def __str__(self):
-        return ''
-
-_no_data = NoData()
-
-
 __all__ = ['Reporter', 'MultiReporter', 'ReporterFactory', 'ValueReporter', 'TextReporter', 'CsvReporter', 'CodeSpeedReporter']

@@ -4,9 +4,9 @@ import sys
 import gc
 import time
 
-from .reporters import _no_data
 from .suite import BenchmarkSuite
 from .decorators import _get_metainfo
+from .util import _no_data
 
 
 if sys.version_info.major < 3:
