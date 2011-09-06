@@ -23,7 +23,12 @@ class BenchmarkRunner(object):
 
     @staticmethod
     def _method_name(method):
-        klass = method.__self__.__class__
+        try:
+            klass = method.__self__.__class__
+        except AttributeError:
+            # for old CPython, PyPy 1.5
+            klass = method.im_class
+
         return '%s.%s' % (klass.__name__, method.__name__)
 
     def run_repeat(self, method, data, calls):
