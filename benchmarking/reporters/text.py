@@ -1,7 +1,10 @@
 from __future__ import division, print_function, absolute_import
 
 import sys
-import repr as reprlib
+if sys.version_info.major < 3:
+    import repr as reprlib
+else:
+    import reprlib
 
 from .reporter import Reporter
 
