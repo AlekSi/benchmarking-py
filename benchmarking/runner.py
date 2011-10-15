@@ -31,6 +31,20 @@ class BenchmarkRunner(object):
 
         return '%s.%s' % (klass.__name__, method.__name__)
 
+    @staticmethod
+    def _wait_for_deferred(d):
+        def stop_reactor(res):
+            # print(repr(res))
+            reactor.crash()
+
+        from twisted.internet import defer, reactor
+        if isinstance(d, defer.Deferred):
+            if d.called:
+                return
+
+            d.addBoth(stop_reactor)
+            reactor.run()
+
     def run_repeat(self, method, data, calls):
         """
         @param method: callable to be benchmarked
@@ -44,25 +58,22 @@ class BenchmarkRunner(object):
         if self.disable_gc:
             gc.disable()
 
-        # TODO: alternatives??
-        #  1) getsourcelines, add loop, compile, exec
-        #  2) start and stop timer inside loop
-        def without_data():
-            for _ in range(calls):
-                method()
-
-        def with_data():
-            for _ in range(calls):
-                method(data)
-
-        doit = without_data if data is _no_data else with_data
+        doit = method if data is _no_data else lambda: method(data)
+        if 'twisted.internet' in sys.modules:
+            d = doit
+            doit = lambda: self._wait_for_deferred(d())
 
         try:
             timer_func = self.timer_func
-            start = timer_func()
-            doit()
-            stop = timer_func()
-            return stop - start
+            total = 0.0
+
+            for _ in range(calls):
+                start = timer_func()
+                doit()
+                stop = timer_func()
+                total += stop - start
+
+            return total
 
         finally:
             if gc_enabled:
