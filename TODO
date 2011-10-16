@@ -1,5 +1,6 @@
 DOCS!!!!11
 
+data function - classmethod, staticmethod
 investigate function call overhead
 profile mode (??)
 Class decorators
