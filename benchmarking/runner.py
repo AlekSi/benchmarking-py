@@ -13,6 +13,10 @@ if sys.version_info.major < 3:
     range = xrange
 
 
+class TimeoutError(Exception):
+    pass
+
+
 class BenchmarkRunner(object):
     def __init__(self, reporter, max_seconds=3, repeats=10, disable_gc=False):
         self.reporter = reporter
@@ -31,17 +35,22 @@ class BenchmarkRunner(object):
 
         return '%s.%s' % (klass.__name__, method.__name__)
 
-    @staticmethod
-    def _wait_for_deferred(d):
-        def stop_reactor(res):
-            # print(repr(res))
+    def _wait_for_deferred(self, d):
+        from twisted.internet import defer, reactor
+        from twisted.python import failure
+
+        def stop_reactor(result):
+            if timeout_guard.active():
+                timeout_guard.cancel()
+
             reactor.crash()
 
-        from twisted.internet import defer, reactor
-        if isinstance(d, defer.Deferred):
-            if d.called:
-                return
+            if isinstance(result, failure.Failure):
+                # print(repr(result.value))
+                raise result.value
 
+        if isinstance(d, defer.Deferred) and not d.called:
+            timeout_guard = reactor.callLater(self.max_seconds, lambda: d.errback(TimeoutError("%r timed out" % d)))
             d.addBoth(stop_reactor)
             reactor.run()
 
