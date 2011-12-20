@@ -35,24 +35,30 @@ class BenchmarkRunner(object):
 
         return '%s.%s' % (klass.__name__, method.__name__)
 
-    def _wait_for_deferred(self, d):
+    def _wait_for_deferred(self, func):
         from twisted.internet import defer, reactor
-        from twisted.python import failure
 
-        def stop_reactor(result):
+        d = defer.maybeDeferred(func)
+        res = {}
+
+        def store_exception(failure):
+            res['exc'] = failure.value
+
+        def stop_reactor(_):
             if timeout_guard.active():
                 timeout_guard.cancel()
 
             reactor.crash()
 
-            if isinstance(result, failure.Failure):
-                # print(repr(result.value))
-                raise result.value
+        d.addErrback(store_exception)
 
-        if isinstance(d, defer.Deferred) and not d.called:
+        if not d.called:
             timeout_guard = reactor.callLater(self.max_seconds, lambda: d.errback(TimeoutError("%r timed out" % d)))
-            d.addBoth(stop_reactor)
+            d.addCallback(stop_reactor)
             reactor.run()
+
+        if 'exc' in res:
+            raise res['exc']
 
     def run_repeat(self, method, data, calls):
         """
@@ -69,8 +75,8 @@ class BenchmarkRunner(object):
 
         doit = method if data is _no_data else lambda: method(data)
         if 'twisted.internet' in sys.modules:
-            d = doit
-            doit = lambda: self._wait_for_deferred(d())
+            func = doit
+            doit = lambda: self._wait_for_deferred(func)
 
         try:
             timer_func = self.timer_func
