@@ -18,11 +18,11 @@ repr = r.repr
 class TextReporter(Reporter):
     """Prints text results to stdout."""
 
-    def before_repeat(self, method_name, data, current, total):
+    def before_repeat(self, method_name, data_label, current, total):
         print("  %5d / %d" % (current, total), end=': ')
         sys.stdout.flush()
 
-    def after_repeat(self, method_name, data, current, total, calls, result):
+    def after_repeat(self, method_name, data_label, current, total, calls, result):
         print('%f usec per call' % (result * 1000000 / calls))
 
     def before_benchmark(self, method_name, data_label):

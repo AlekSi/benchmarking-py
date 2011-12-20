@@ -12,5 +12,5 @@ class CsvReporter(Reporter):
         import csv
         self.writer = csv.writer(csvfile, dialect=dialect, **fmtparam)
 
-    def after_repeat(self, method_name, data, current, total, calls, result):
-        self.writer.writerow([method_name, data, current, total, result * 1000000 / calls])
+    def after_repeat(self, method_name, data_label, current, total, calls, result):
+        self.writer.writerow([method_name, data_label, current, total, result * 1000000 / calls])

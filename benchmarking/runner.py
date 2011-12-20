@@ -115,7 +115,7 @@ class BenchmarkRunner(object):
             else:
                 return calls
 
-    def run_benchmark(self, instance, method, data):
+    def run_benchmark(self, instance, method, data_label, data):
         """
         Runs instance's method with data. Handles setUp, tearDown. Delegates to run_repeat.
         """
@@ -129,10 +129,10 @@ class BenchmarkRunner(object):
         for n in range(repeats):
             instance.setUp()
 
-            self.reporter.before_repeat(full_method_name, data, n + 1, repeats)
+            self.reporter.before_repeat(full_method_name, data_label, n + 1, repeats)
             result = self.run_repeat(method, data, calls)
             total.append(result)
-            self.reporter.after_repeat(full_method_name, data, n + 1, repeats, calls, result)
+            self.reporter.after_repeat(full_method_name, data_label, n + 1, repeats, calls, result)
 
             instance.tearDown()
 
@@ -146,9 +146,9 @@ class BenchmarkRunner(object):
         full_method_name = self._full_method_name(method)
 
         data_function = _get_metainfo(method, 'data_function') or (lambda: ((_no_data, _no_data),))
-        for data_label, value in data_function():
+        for data_label, data in data_function():
             self.reporter.before_benchmark(full_method_name, data_label)
-            calls, total = self.run_benchmark(instance, method, value)
+            calls, total = self.run_benchmark(instance, method, data_label, data)
             self.reporter.after_benchmark(full_method_name, data_label, calls, total)
 
     def run(self, classes):
