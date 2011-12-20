@@ -21,7 +21,7 @@ class FibonacciBenchmarkCase(benchmarking.BenchmarkCase):
     def matrix_data():
         n = 1
         while n <= 16:
-            yield n
+            yield (n, n)
             n *= 2
 
     @benchmarking.data_function(matrix_data)

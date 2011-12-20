@@ -42,7 +42,7 @@ class RunnerBenchmarkCase(BenchmarkCase):
 
     def data():
         for x in [1, 2, 3]:
-            yield x
+            yield (x, x)
 
     @calls(4)
     @repeats(5)

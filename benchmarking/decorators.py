@@ -39,7 +39,7 @@ def data(*args):
     """Specifies data arguments for benchmark."""
 
     def f(method):
-        _set_metainfo(method, 'data_function', lambda: args)
+        _set_metainfo(method, 'data_function', lambda: zip(args, args))
         return method
     return f
 

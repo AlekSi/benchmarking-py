@@ -25,8 +25,8 @@ class TextReporter(Reporter):
     def after_repeat(self, method_name, data, current, total, calls, result):
         print('%f usec per call' % (result * 1000000 / calls))
 
-    def before_benchmark(self, method_name, data):
-        print('%s(%s)' % (method_name, repr(data)), end=':\n')
+    def before_benchmark(self, method_name, data_label):
+        print('%s(%r)' % (method_name, data_label), end=':\n')
         sys.stdout.flush()
 
     def after_benchmark(self, method_name, data, calls, results):
