@@ -4,7 +4,7 @@ from distutils.core import setup
 
 setup(
     name='benchmarking',
-    version='0.0.4',
+    version='0.0.5',
     author='Alexey Palazhchenko',
     author_email='alexey.palazhchenko@gmail.com',
     packages=['benchmarking', 'benchmarking/reporters'],
