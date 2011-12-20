@@ -26,20 +26,21 @@ class BenchmarkRunner(object):
         self.timer_func = time.time
 
     @staticmethod
-    def _full_method_name(method):
+    def _full_method_name(instancemethod):
         """
         Return instancemethod's name as string.
         """
 
         try:
-            klass = method.__self__.__class__
+            klass = instancemethod.__self__.__class__
         except AttributeError:
             # for old CPython, PyPy 1.5
-            klass = method.im_class
+            klass = instancemethod.im_class
 
-        return '%s.%s' % (klass.__name__, method.__name__)
+        return '%s.%s' % (klass.__name__, instancemethod.__name__)
 
-    def _wait_for_deferred(self, func):
+    @staticmethod
+    def _wait_for_deferred(func, max_seconds):
         from twisted.internet import defer, reactor
 
         d = defer.maybeDeferred(func)
@@ -57,8 +58,8 @@ class BenchmarkRunner(object):
         d.addErrback(store_exception)
 
         if not d.called:
-            timeout_guard = reactor.callLater(self.max_seconds,
-                lambda: d.errback(TimeoutError("%r is still running after %d seconds" % (d, self.max_seconds))))
+            timeout_guard = reactor.callLater(max_seconds,
+                lambda: d.errback(TimeoutError("%r is still running after %d seconds" % (d, max_seconds))))
             d.addCallback(stop_reactor)
             reactor.run()
 
@@ -83,7 +84,7 @@ class BenchmarkRunner(object):
         doit = method if data is _no_data else lambda: method(data)
         if 'twisted.internet' in sys.modules:
             func = doit
-            doit = lambda: self._wait_for_deferred(func)
+            doit = lambda: self._wait_for_deferred(func, self.max_seconds)
 
         try:
             timer_func = self.timer_func
@@ -126,33 +127,41 @@ class BenchmarkRunner(object):
 
         total = []
         for n in range(repeats):
-            self.reporter.before_repeat(full_method_name, data, n + 1, repeats)
             instance.setUp()
+
+            self.reporter.before_repeat(full_method_name, data, n + 1, repeats)
             result = self.run_repeat(method, data, calls)
             total.append(result)
-            instance.tearDown()
             self.reporter.after_repeat(full_method_name, data, n + 1, repeats, calls, result)
+
+            instance.tearDown()
+
         return (calls, total)
+
+    def run_instance_method(self, instance, method):
+        """
+        Run instance method with all data.
+        """
+
+        full_method_name = self._full_method_name(method)
+
+        data_function = _get_metainfo(method, 'data_function') or (lambda: [_no_data])
+        for data in data_function():
+            self.reporter.before_benchmark(full_method_name, data)
+            calls, total = self.run_benchmark(instance, method, data)
+            self.reporter.after_benchmark(full_method_name, data, calls, total)
 
     def run(self, classes):
         """
         @returns: result of L{after_run}
         """
+
         for klass in classes:
             klass.setUpClass()
 
             for method_name in BenchmarkSuite.collect_method_names(klass):
                 instance = klass()
-
-                method = getattr(instance, method_name)
-                full_method_name = self._full_method_name(method)
-
-                data_function = _get_metainfo(method, 'data_function') or (lambda: [_no_data])
-                for data in data_function():
-                    self.reporter.before_benchmark(full_method_name, data)
-                    calls, total = self.run_benchmark(instance, method, data)
-                    self.reporter.after_benchmark(full_method_name, data, calls, total)
-
+                self.run_instance_method(instance, getattr(instance, method_name))
                 del instance
 
             klass.tearDownClass()

@@ -5,6 +5,7 @@ import unittest
 from ..case import BenchmarkCase
 from .. import main
 
+
 class MainBenchmarkCase(BenchmarkCase):
     pass
 
