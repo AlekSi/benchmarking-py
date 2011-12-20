@@ -6,8 +6,8 @@ from .case import BenchmarkCase
 class BenchmarkSuite(object):
     @staticmethod
     def collect_classes():
-        klasses = BenchmarkCase.__subclasses__()
-        return sorted(klasses)
+        classes = BenchmarkCase.__subclasses__()
+        return sorted(classes)
 
     @staticmethod
     def collect_method_names(klass):

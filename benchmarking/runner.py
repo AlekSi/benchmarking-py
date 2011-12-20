@@ -26,7 +26,11 @@ class BenchmarkRunner(object):
         self.timer_func = time.time
 
     @staticmethod
-    def _method_name(method):
+    def _full_method_name(method):
+        """
+        Return instancemethod's name as string.
+        """
+
         try:
             klass = method.__self__.__class__
         except AttributeError:
@@ -53,7 +57,8 @@ class BenchmarkRunner(object):
         d.addErrback(store_exception)
 
         if not d.called:
-            timeout_guard = reactor.callLater(self.max_seconds, lambda: d.errback(TimeoutError("%r timed out" % d)))
+            timeout_guard = reactor.callLater(self.max_seconds,
+                lambda: d.errback(TimeoutError("%r is still running after %d seconds" % (d, self.max_seconds))))
             d.addCallback(stop_reactor)
             reactor.run()
 
@@ -62,8 +67,10 @@ class BenchmarkRunner(object):
 
     def run_repeat(self, method, data, calls):
         """
+        Call method(data) specified number of times.
+
         @param method: callable to be benchmarked
-        @param data: benchmark method argument
+        @param data: argument for method
         @param calls: number of calls
         @return: number of seconds as C{float}
         """
@@ -95,7 +102,9 @@ class BenchmarkRunner(object):
                 gc.enable()
 
     def get_calls(self, method, data, max_seconds):
-        """Calculate number of calls."""
+        """
+        Calculate number of calls.
+        """
 
         calls, prev_time, time = 1, 0, 0
         while True:
@@ -105,41 +114,45 @@ class BenchmarkRunner(object):
             else:
                 return calls
 
-    def run_benchmark(self, method, data):
+    def run_benchmark(self, instance, method, data):
+        """
+        Runs instance's method with data. Handles setUp, tearDown. Delegates to run_repeat.
+        """
+
         max_seconds = _get_metainfo(method, 'seconds') or self.max_seconds
         repeats = _get_metainfo(method, 'repeats') or self.repeats
         calls = _get_metainfo(method, 'calls') or self.get_calls(method, data, max_seconds)
-        method_name = self._method_name(method)
+        full_method_name = self._full_method_name(method)
 
-        res = []
+        total = []
         for n in range(repeats):
-            self.reporter.before_repeat(method_name, data, n + 1, repeats)
+            self.reporter.before_repeat(full_method_name, data, n + 1, repeats)
+            instance.setUp()
             result = self.run_repeat(method, data, calls)
-            res.append(result)
-            self.reporter.after_repeat(method_name, data, n + 1, repeats, calls, result)
-        return (calls, res)
+            total.append(result)
+            instance.tearDown()
+            self.reporter.after_repeat(full_method_name, data, n + 1, repeats, calls, result)
+        return (calls, total)
 
-    def run(self):
+    def run(self, classes):
         """
         @returns: result of L{after_run}
         """
-        for klass in BenchmarkSuite.collect_classes():
+        for klass in classes:
             klass.setUpClass()
 
             for method_name in BenchmarkSuite.collect_method_names(klass):
                 instance = klass()
-                instance.setUp()
 
                 method = getattr(instance, method_name)
-                method_name = self._method_name(method)
+                full_method_name = self._full_method_name(method)
 
                 data_function = _get_metainfo(method, 'data_function') or (lambda: [_no_data])
                 for data in data_function():
-                    self.reporter.before_benchmark(method_name, data)
-                    calls, total = self.run_benchmark(method, data)
-                    self.reporter.after_benchmark(method_name, data, calls, total)
+                    self.reporter.before_benchmark(full_method_name, data)
+                    calls, total = self.run_benchmark(instance, method, data)
+                    self.reporter.after_benchmark(full_method_name, data, calls, total)
 
-                instance.tearDown()
                 del instance
 
             klass.tearDownClass()
