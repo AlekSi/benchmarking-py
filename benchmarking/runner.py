@@ -40,14 +40,27 @@ class BenchmarkRunner(object):
         return '%s.%s' % (klass.__name__, instancemethod.__name__)
 
     @staticmethod
-    def _wait_for_deferred(func, max_seconds):
+    def _wait_for_deferred(d, max_seconds):
+        """
+        Waits for deffered to callback.
+
+        @type d: deferred; otherwise returns it as is.
+        """
+
         from twisted.internet import defer, reactor
 
-        d = defer.maybeDeferred(func)
+        if not isinstance(d, defer.Deferred):
+            return d
+
         res = {}
 
+        def store_result(result):
+            res['result'] = result
+
         def store_exception(failure):
-            res['exc'] = failure.value
+            res['exception'] = failure.value
+
+        d.addCallbacks(store_result, store_exception)
 
         def stop_reactor(_):
             if timeout_guard.active():
@@ -55,16 +68,16 @@ class BenchmarkRunner(object):
 
             reactor.crash()
 
-        d.addErrback(store_exception)
-
         if not d.called:
             timeout_guard = reactor.callLater(max_seconds,
                 lambda: d.errback(TimeoutError("%r is still running after %d seconds" % (d, max_seconds))))
             d.addCallback(stop_reactor)
             reactor.run()
 
-        if 'exc' in res:
-            raise res['exc']
+        if 'exception' in res:
+            raise res['exception']
+
+        return res['result']
 
     def run_repeat(self, method, data, calls):
         """
@@ -82,9 +95,9 @@ class BenchmarkRunner(object):
             gc.disable()
 
         doit = method if data is _no_data else lambda: method(data)
-        if 'twisted.internet' in sys.modules:
-            func = doit
-            doit = lambda: self._wait_for_deferred(func, self.max_seconds)
+        if 'twisted' in sys.modules:
+            original_doit = doit
+            doit = lambda: self._wait_for_deferred(original_doit(), self.max_seconds)
 
         try:
             timer_func = self.timer_func
