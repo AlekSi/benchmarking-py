@@ -115,14 +115,17 @@ class BenchmarkRunner(object):
             if gc_enabled:
                 gc.enable()
 
-    def get_calls(self, method, data, max_seconds):
+    def get_calls(self, instance, method, data, max_seconds):
         """
         Calculate number of calls.
         """
 
         calls, prev_time, time = 1, 0, 0
         while True:
+            instance.setUp()
             prev_time, time = time, self.run_repeat(method, data, calls)
+            instance.tearDown()
+
             if prev_time <= time < (max_seconds * 0.9):
                 calls = int(max_seconds / time * calls)
             else:
@@ -135,7 +138,7 @@ class BenchmarkRunner(object):
 
         max_seconds = _get_metainfo(method, 'seconds') or self.max_seconds
         repeats = _get_metainfo(method, 'repeats') or self.repeats
-        calls = _get_metainfo(method, 'calls') or self.get_calls(method, data, max_seconds)
+        calls = _get_metainfo(method, 'calls') or self.get_calls(instance, method, data, max_seconds)
         full_method_name = self._full_method_name(method)
 
         total = []
