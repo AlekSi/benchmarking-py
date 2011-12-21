@@ -7,7 +7,7 @@ class BenchmarkSuite(object):
     @staticmethod
     def collect_classes():
         classes = BenchmarkCase.__subclasses__()
-        return sorted(classes)
+        return sorted(classes, key=str)
 
     @staticmethod
     def collect_method_names(klass):
