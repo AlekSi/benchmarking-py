@@ -50,6 +50,18 @@ class RunnerBenchmarkCase(BenchmarkCase):
     def benchmark_3(self, inc):
         count(self, 'count_benchmark_3', inc)
 
+    def data_deferred():
+        for x in [1, 2, 3]:
+            d = defer.Deferred()
+            reactor.callLater(0, d.callback, x)
+            yield (x, d)
+
+    @calls(4)
+    @repeats(5)
+    @data_function(data_deferred)
+    def benchmark_4(self, inc):
+        count(self, 'count_benchmark_4', inc)
+
 
 class RunnerTestCase(unittest.TestCase):
     def setUp(self):
@@ -99,6 +111,7 @@ class RunnerTestCase(unittest.TestCase):
         self.assertEqual(6, instance.count_benchmark_1)
         self.assertFalse(hasattr(instance, 'count_benchmark_2'))
         self.assertFalse(hasattr(instance, 'count_benchmark_3'))
+        self.assertFalse(hasattr(instance, 'count_benchmark_4'))
 
     def test_run_instance_method_2(self):
         instance = RunnerBenchmarkCase()
@@ -108,6 +121,7 @@ class RunnerTestCase(unittest.TestCase):
         self.assertFalse(hasattr(instance, 'count_benchmark_1'))
         self.assertEqual(120, instance.count_benchmark_2)
         self.assertFalse(hasattr(instance, 'count_benchmark_3'))
+        self.assertFalse(hasattr(instance, 'count_benchmark_4'))
 
     def test_run_instance_method_3(self):
         instance = RunnerBenchmarkCase()
@@ -117,6 +131,17 @@ class RunnerTestCase(unittest.TestCase):
         self.assertFalse(hasattr(instance, 'count_benchmark_1'))
         self.assertFalse(hasattr(instance, 'count_benchmark_2'))
         self.assertEqual(120, instance.count_benchmark_3)
+        self.assertFalse(hasattr(instance, 'count_benchmark_4'))
+
+    def test_run_instance_method_4(self):
+        instance = RunnerBenchmarkCase()
+        self.runner.run_instance_method(instance, instance.benchmark_4)
+        self.assertEqual(15, instance.count_instance_up)
+        self.assertEqual(15, instance.count_instance_down)
+        self.assertFalse(hasattr(instance, 'count_benchmark_1'))
+        self.assertFalse(hasattr(instance, 'count_benchmark_2'))
+        self.assertFalse(hasattr(instance, 'count_benchmark_3'))
+        self.assertEqual(120, instance.count_benchmark_4)
 
     def test_run(self):
         self.runner.run([RunnerBenchmarkCase])
@@ -127,3 +152,4 @@ class RunnerTestCase(unittest.TestCase):
         self.assertFalse(hasattr(RunnerBenchmarkCase, 'count_benchmark_1'))
         self.assertFalse(hasattr(RunnerBenchmarkCase, 'count_benchmark_2'))
         self.assertFalse(hasattr(RunnerBenchmarkCase, 'count_benchmark_3'))
+        self.assertFalse(hasattr(RunnerBenchmarkCase, 'count_benchmark_4'))

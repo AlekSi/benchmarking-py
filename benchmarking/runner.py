@@ -160,6 +160,9 @@ class BenchmarkRunner(object):
 
         data_function = _get_metainfo(method, 'data_function') or (lambda: ((_no_data, _no_data),))
         for (data_label, data) in data_function():
+            if 'twisted' in sys.modules:
+                data = self._wait_for_deferred(data, self.max_seconds)
+
             self.reporter.before_benchmark(full_method_name, data_label)
             calls, total = self.run_benchmark(instance, method, data_label, data)
             self.reporter.after_benchmark(full_method_name, data_label, calls, total)
