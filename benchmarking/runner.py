@@ -146,7 +146,7 @@ class BenchmarkRunner(object):
         full_method_name = self._full_method_name(method)
 
         data_function = _get_metainfo(method, 'data_function') or (lambda: ((_no_data, _no_data),))
-        for data_label, data in data_function():
+        for (data_label, data) in data_function():
             self.reporter.before_benchmark(full_method_name, data_label)
             calls, total = self.run_benchmark(instance, method, data_label, data)
             self.reporter.after_benchmark(full_method_name, data_label, calls, total)
