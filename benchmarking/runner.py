@@ -101,15 +101,13 @@ class BenchmarkRunner(object):
 
         try:
             timer_func = self.timer_func
-            total = 0.0
 
+            start = timer_func()
             for _ in range(calls):
-                start = timer_func()
                 doit()
-                stop = timer_func()
-                total += stop - start
+            stop = timer_func()
 
-            return total
+            return stop - start
 
         finally:
             if gc_enabled:
