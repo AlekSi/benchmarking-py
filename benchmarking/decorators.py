@@ -165,3 +165,48 @@ def deferred(func=None, max_seconds=120):
         return _deferred
     else:
         return _deferred(func)
+
+
+def async(func=None, concurrency=1, requests=1000):
+    def _deferred(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            from twisted.internet import defer, task
+
+            d = defer.Deferred()
+            sem = defer.DeferredSemaphore(concurrency)
+            req = { 'left': requests }
+
+            def startMore():
+                def release(_):
+                    sem.release()
+
+                    if req['left'] == 0 and sem.tokens == concurrency:
+                        d.callback(None)
+
+                    return _
+
+                def gotError(fail):
+                    d.errback(fail)
+
+                def acquired(_):
+                    defer.maybeDeferred(func, *args, **kwargs).addErrback(gotError).addBoth(release)
+
+                req['left'] -= 1
+                if req['left'] == 0:
+                    starter.stop()
+
+                return sem.acquire().addCallback(acquired)
+
+            starter = task.LoopingCall(startMore)
+            starter.start(0, True)
+
+            return d
+
+        _set_metainfo(wrapper, 'calls', requests)
+        return wrapper
+
+    if func is None:
+        return _deferred
+    else:
+        return _deferred(func)
