@@ -31,14 +31,14 @@ class RunnerBenchmarkCase(BenchmarkCase):
         count(self, 'count_instance_down')
         del self.param
 
-    @calls(2)
     @repeats(3)
+    @calls(2)
     def benchmark_1(self):
         count(self, 'count_benchmark_1')
 
-    @calls(4)
-    @repeats(5)
     @data(1, 2, 3)
+    @repeats(5)
+    @calls(4)
     def benchmark_2(self, inc):
         count(self, 'count_benchmark_2', inc)
 
@@ -46,9 +46,9 @@ class RunnerBenchmarkCase(BenchmarkCase):
         for x in [1, 2, 3]:
             yield (x, x)
 
-    @calls(4)
-    @repeats(5)
     @data_function(data)
+    @repeats(5)
+    @calls(4)
     def benchmark_3(self, inc):
         count(self, 'count_benchmark_3', inc)
 
@@ -58,14 +58,14 @@ class RunnerBenchmarkCase(BenchmarkCase):
             reactor.callLater(0, d.callback, x)
             yield (x, d)
 
-    @calls(4)
-    @repeats(5)
     @deferred_data_function(data_deferred)
+    @repeats(5)
+    @calls(4)
     def benchmark_4(self, inc):
         count(self, 'count_benchmark_4', inc)
 
-    @seconds(1)
     @repeats(1)
+    @seconds(max_seconds=1)
     def benchmark_5(self):
         count(self, 'count_benchmark_5')
         self.param
@@ -73,20 +73,20 @@ class RunnerBenchmarkCase(BenchmarkCase):
 
 class RunnerTestCase(unittest.TestCase):
     def setUp(self):
-        self.runner = BenchmarkRunner(reporter=Reporter(), max_seconds=1)
+        self.runner = BenchmarkRunner(reporter=Reporter())
 
     def test_run_repeat_exception(self):
         def func():
             raise RuntimeError()
 
-        self.assertRaises(RuntimeError, self.runner.run_repeat, func, _no_data, 1)
+        self.assertRaises(RuntimeError, self.runner.run_repeat, func, _no_data)
 
     def test_run_repeat_errback_sync(self):
         @deferred
         def func():
             return defer.fail(RuntimeError())
 
-        self.assertRaises(RuntimeError, self.runner.run_repeat, func, _no_data, 1)
+        self.assertRaises(RuntimeError, self.runner.run_repeat, func, _no_data)
 
     def test_run_repeat_errback(self):
         @deferred
@@ -95,7 +95,7 @@ class RunnerTestCase(unittest.TestCase):
             reactor.callLater(0, d.errback, RuntimeError())
             return d
 
-        self.assertRaises(RuntimeError, self.runner.run_repeat, func, _no_data, 1)
+        self.assertRaises(RuntimeError, self.runner.run_repeat, func, _no_data)
 
     def test_run_repeat_timeout(self):
         @deferred(max_seconds=0.5)
@@ -104,7 +104,7 @@ class RunnerTestCase(unittest.TestCase):
             reactor.callLater(999, d.callback, 'never called')
             return d
 
-        self.assertRaises(TimeoutError, self.runner.run_repeat, func, _no_data, 1)
+        self.assertRaises(TimeoutError, self.runner.run_repeat, func, _no_data)
 
     def test_run_instance_method_1(self):
         instance = RunnerBenchmarkCase()

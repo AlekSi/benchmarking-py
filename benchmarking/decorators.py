@@ -1,4 +1,5 @@
 from functools import wraps
+from .util import range
 
 
 def _set_metainfo(method, key, value):
@@ -15,18 +16,58 @@ def calls(number):
     """Specifies a number of benchmark method calls per single repeat."""
 
     def f(method):
-        _set_metainfo(method, 'calls', number)
-        return method
+        @wraps(method)
+        def wrapper(*args, **kwargs):
+            for _ in range(number):
+                method(*args, **kwargs)
+
+        _set_metainfo(wrapper, 'calls', number)
+        return wrapper
     return f
 
 
-def seconds(number):
+def seconds(func=None, max_seconds=3):
     """Specifies a number of seconds for single repeat."""
 
     def f(method):
-        _set_metainfo(method, 'seconds', number)
-        return method
-    return f
+        params = {}
+
+        def calculate_calls(runner, instance, method, data):
+            """
+            Calculate number of calls.
+            """
+
+            def repeater(func, calls):
+                def f(*args, **kwargs):
+                    for _ in range(calls):
+                        func(*args, **kwargs)
+
+                return f
+
+            calls, prev_time, time = 1, 0, 0
+            while True:
+                instance.setUp()
+                params['calls'] = calls
+                prev_time, time = time, runner.run_repeat(method, data)
+                instance.tearDown()
+
+                if prev_time <= time < (max_seconds * 0.9):
+                    calls = int(max_seconds / time * calls)
+                else:
+                    return calls
+
+        @wraps(method)
+        def wrapper(*args, **kwargs):
+            for _ in range(params['calls']):
+                method(*args, **kwargs)
+
+        _set_metainfo(wrapper, 'calls', calculate_calls)
+        return wrapper
+
+    if func is None:
+        return f
+    else:
+        return f(func)
 
 
 def repeats(number):

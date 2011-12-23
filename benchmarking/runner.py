@@ -1,22 +1,16 @@
 from __future__ import division, print_function, absolute_import
 
-import sys
 import gc
 import time
 
 from .suite import BenchmarkSuite
 from .decorators import _get_metainfo
-from .util import _no_data
-
-
-if sys.version_info.major < 3:
-    range = xrange
+from .util import _no_data, range
 
 
 class BenchmarkRunner(object):
-    def __init__(self, reporter, max_seconds=3, repeats=10, disable_gc=False):
+    def __init__(self, reporter, repeats=10, disable_gc=False):
         self.reporter = reporter
-        self.max_seconds = max_seconds
         self.repeats = repeats
         self.disable_gc = disable_gc
         self.timer_func = time.time
@@ -35,13 +29,12 @@ class BenchmarkRunner(object):
 
         return '%s.%s' % (klass.__name__, instancemethod.__name__)
 
-    def run_repeat(self, method, data, calls):
+    def run_repeat(self, method, data):
         """
         Call method(data) specified number of times.
 
         @param method: callable to be benchmarked
         @param data: argument for method
-        @param calls: number of calls
         @return: number of seconds as C{float}
         """
 
@@ -56,8 +49,7 @@ class BenchmarkRunner(object):
             timer_func = self.timer_func
 
             start = timer_func()
-            for _ in range(calls):
-                doit()
+            doit()
             stop = timer_func()
 
             return stop - start
@@ -66,30 +58,16 @@ class BenchmarkRunner(object):
             if gc_enabled:
                 gc.enable()
 
-    def get_calls(self, instance, method, data, max_seconds):
-        """
-        Calculate number of calls.
-        """
-
-        calls, prev_time, time = 1, 0, 0
-        while True:
-            instance.setUp()
-            prev_time, time = time, self.run_repeat(method, data, calls)
-            instance.tearDown()
-
-            if prev_time <= time < (max_seconds * 0.9):
-                calls = int(max_seconds / time * calls)
-            else:
-                return calls
-
     def run_benchmark(self, instance, method, data_label, data):
         """
         Runs instance's method with data. Handles setUp, tearDown. Delegates to run_repeat.
         """
 
-        max_seconds = _get_metainfo(method, 'seconds') or self.max_seconds
         repeats = _get_metainfo(method, 'repeats') or self.repeats
-        calls = _get_metainfo(method, 'calls') or self.get_calls(instance, method, data, max_seconds)
+        calls = _get_metainfo(method, 'calls')
+        if callable(calls):
+            calls = calls(self, instance, method,  data)
+
         full_method_name = self._full_method_name(method)
 
         total = []
@@ -97,7 +75,7 @@ class BenchmarkRunner(object):
             instance.setUp()
 
             self.reporter.before_repeat(full_method_name, data_label, n + 1, repeats)
-            result = self.run_repeat(method, data, calls)
+            result = self.run_repeat(method, data)
             total.append(result)
             self.reporter.after_repeat(full_method_name, data_label, n + 1, repeats, calls, result)
 
