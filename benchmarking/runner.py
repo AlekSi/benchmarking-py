@@ -13,10 +13,6 @@ if sys.version_info.major < 3:
     range = xrange
 
 
-class TimeoutError(Exception):
-    pass
-
-
 class BenchmarkRunner(object):
     def __init__(self, reporter, max_seconds=3, repeats=10, disable_gc=False):
         self.reporter = reporter
@@ -39,46 +35,6 @@ class BenchmarkRunner(object):
 
         return '%s.%s' % (klass.__name__, instancemethod.__name__)
 
-    @staticmethod
-    def _wait_for_deferred(d, max_seconds):
-        """
-        Waits for deffered to callback.
-
-        @type d: deferred; otherwise returns it as is.
-        """
-
-        from twisted.internet import defer, reactor
-
-        if not isinstance(d, defer.Deferred):
-            return d
-
-        res = {}
-
-        def store_result(result):
-            res['result'] = result
-
-        def store_exception(failure):
-            res['exception'] = failure.value
-
-        d.addCallbacks(store_result, store_exception)
-
-        def stop_reactor(_):
-            if timeout_guard.active():
-                timeout_guard.cancel()
-
-            reactor.crash()
-
-        if not d.called:
-            timeout_guard = reactor.callLater(max_seconds,
-                lambda: d.errback(TimeoutError("%r is still running after %d seconds" % (d, max_seconds))))
-            d.addCallback(stop_reactor)
-            reactor.run()
-
-        if 'exception' in res:
-            raise res['exception']
-
-        return res['result']
-
     def run_repeat(self, method, data, calls):
         """
         Call method(data) specified number of times.
@@ -95,9 +51,6 @@ class BenchmarkRunner(object):
             gc.disable()
 
         doit = method if data is _no_data else lambda: method(data)
-        if 'twisted' in sys.modules:
-            original_doit = doit
-            doit = lambda: self._wait_for_deferred(original_doit(), self.max_seconds)
 
         try:
             timer_func = self.timer_func
@@ -161,9 +114,6 @@ class BenchmarkRunner(object):
 
         data_function = _get_metainfo(method, 'data_function') or (lambda: ((_no_data, _no_data),))
         for (data_label, data) in data_function():
-            if 'twisted' in sys.modules:
-                data = self._wait_for_deferred(data, self.max_seconds)
-
             self.reporter.before_benchmark(full_method_name, data_label)
             calls, total = self.run_benchmark(instance, method, data_label, data)
             self.reporter.after_benchmark(full_method_name, data_label, calls, total)

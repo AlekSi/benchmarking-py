@@ -3,8 +3,8 @@ from __future__ import division, absolute_import
 from twisted.internet import defer, reactor
 import unittest
 
-from ..decorators import calls, seconds, repeats, data, data_function
-from ..runner import BenchmarkRunner, TimeoutError
+from ..decorators import calls, seconds, repeats, data, data_function, deferred_data_function, deferred, TimeoutError
+from ..runner import BenchmarkRunner
 from ..case import BenchmarkCase
 from ..reporters import Reporter
 from ..util import _no_data
@@ -60,7 +60,7 @@ class RunnerBenchmarkCase(BenchmarkCase):
 
     @calls(4)
     @repeats(5)
-    @data_function(data_deferred)
+    @deferred_data_function(data_deferred)
     def benchmark_4(self, inc):
         count(self, 'count_benchmark_4', inc)
 
@@ -82,12 +82,14 @@ class RunnerTestCase(unittest.TestCase):
         self.assertRaises(RuntimeError, self.runner.run_repeat, func, _no_data, 1)
 
     def test_run_repeat_errback_sync(self):
+        @deferred
         def func():
             return defer.fail(RuntimeError())
 
         self.assertRaises(RuntimeError, self.runner.run_repeat, func, _no_data, 1)
 
     def test_run_repeat_errback(self):
+        @deferred
         def func():
             d = defer.Deferred()
             reactor.callLater(0, d.errback, RuntimeError())
@@ -96,20 +98,13 @@ class RunnerTestCase(unittest.TestCase):
         self.assertRaises(RuntimeError, self.runner.run_repeat, func, _no_data, 1)
 
     def test_run_repeat_timeout(self):
+        @deferred(max_seconds=0.5)
         def func():
             d = defer.Deferred()
             reactor.callLater(999, d.callback, 'never called')
             return d
 
         self.assertRaises(TimeoutError, self.runner.run_repeat, func, _no_data, 1)
-
-    def test_wait_for_object(self):
-        self.assertEqual(self.runner._wait_for_deferred(1, 1), 1)
-
-    def test_wait_for_deferred(self):
-        d = defer.Deferred()
-        reactor.callLater(0, d.callback, 1)
-        self.assertEqual(self.runner._wait_for_deferred(d, 1), 1)
 
     def test_run_instance_method_1(self):
         instance = RunnerBenchmarkCase()
