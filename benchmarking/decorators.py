@@ -102,6 +102,10 @@ class TimeoutError(Exception):
     pass
 
 
+class ReactorError(Exception):
+    pass
+
+
 def deferred(func=None, max_seconds=120):
     """
     Wraps up deferred function to become synchronous with reactor stop/start around.
@@ -143,7 +147,16 @@ def deferred(func=None, max_seconds=120):
                 if timeout_guard.active():
                     timeout_guard.cancel()
 
+                reactor.disconnectAll()
                 reactor.crash()
+
+                if len(reactor.getDelayedCalls()) != 0:
+                    calls = reactor.getDelayedCalls()
+
+                    for call in calls:
+                        call.cancel()
+
+                    res['exception'] = ReactorError("Reactor unclean: delayed calls %r" % (calls, ))
 
             if not d.called:
                 timeout_guard = reactor.callLater(max_seconds,

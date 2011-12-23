@@ -100,9 +100,7 @@ class RunnerTestCase(unittest.TestCase):
     def test_run_repeat_timeout(self):
         @deferred(max_seconds=0.5)
         def func():
-            d = defer.Deferred()
-            reactor.callLater(999, d.callback, 'never called')
-            return d
+            return defer.Deferred()
 
         self.assertRaises(TimeoutError, self.runner.run_repeat, func, _no_data)
 
