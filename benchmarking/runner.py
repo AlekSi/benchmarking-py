@@ -35,7 +35,7 @@ class BenchmarkRunner(object):
 
         @param method: callable to be benchmarked
         @param data: argument for method
-        @return: number of seconds as C{float}
+        @return: tupe (number of seconds as C{float}, number of calls as C{int})
         """
 
         gc_enabled = gc.isenabled()
@@ -49,10 +49,12 @@ class BenchmarkRunner(object):
             timer_func = self.timer_func
 
             start = timer_func()
-            doit()
+            called = doit()
             stop = timer_func()
 
-            return stop - start
+            assert isinstance(called, int), "Benchmark method should return number of times it has been called"
+
+            return (stop - start, called)
 
         finally:
             if gc_enabled:
@@ -64,20 +66,19 @@ class BenchmarkRunner(object):
         """
 
         repeats = _get_metainfo(method, 'repeats') or self.repeats
-        calls = _get_metainfo(method, 'calls')
-        if callable(calls):
-            calls = calls(self, instance, method,  data)
 
         full_method_name = self._full_method_name(method)
+        calls = 0
 
         total = []
         for n in range(repeats):
             instance.setUp()
 
             self.reporter.before_repeat(full_method_name, data_label, n + 1, repeats)
-            result = self.run_repeat(method, data)
+            result, called = self.run_repeat(method, data)
             total.append(result)
-            self.reporter.after_repeat(full_method_name, data_label, n + 1, repeats, calls, result)
+            calls += called
+            self.reporter.after_repeat(full_method_name, data_label, n + 1, repeats, called, result)
 
             instance.tearDown()
 

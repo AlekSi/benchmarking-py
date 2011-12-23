@@ -153,8 +153,8 @@ class RunnerTestCase(unittest.TestCase):
     def test_run_instance_method_5(self):
         instance = RunnerBenchmarkCase()
         self.runner.run_instance_method(instance, instance.benchmark_5)
-        self.assertTrue(instance.count_instance_up >= 2)
-        self.assertTrue(instance.count_instance_down >= 2)
+        self.assertEqual(instance.count_instance_up, 1)
+        self.assertEqual(instance.count_instance_down, 1)
         self.assertFalse(hasattr(instance, 'count_benchmark_1'))
         self.assertFalse(hasattr(instance, 'count_benchmark_2'))
         self.assertFalse(hasattr(instance, 'count_benchmark_3'))

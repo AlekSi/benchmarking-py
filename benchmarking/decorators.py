@@ -1,4 +1,6 @@
+import signal
 from functools import wraps
+
 from .util import range
 
 
@@ -21,7 +23,8 @@ def calls(number):
             for _ in range(number):
                 method(*args, **kwargs)
 
-        _set_metainfo(wrapper, 'calls', number)
+            return number
+
         return wrapper
     return f
 
@@ -30,38 +33,24 @@ def seconds(func=None, max_seconds=3):
     """Specifies a number of seconds for single repeat."""
 
     def f(method):
-        params = {}
-
-        def calculate_calls(runner, instance, method, data):
-            """
-            Calculate number of calls.
-            """
-
-            def repeater(func, calls):
-                def f(*args, **kwargs):
-                    for _ in range(calls):
-                        func(*args, **kwargs)
-
-                return f
-
-            calls, prev_time, time = 1, 0, 0
-            while True:
-                instance.setUp()
-                params['calls'] = calls
-                prev_time, time = time, runner.run_repeat(method, data)
-                instance.tearDown()
-
-                if prev_time <= time < (max_seconds * 0.9):
-                    calls = int(max_seconds / time * calls)
-                else:
-                    return calls
-
         @wraps(method)
         def wrapper(*args, **kwargs):
-            for _ in range(params['calls']):
-                method(*args, **kwargs)
+            cycle = {'stopped': False}
+            def stop_cycle(_, __):
+                cycle['stopped'] = True
+            signal.signal(signal.SIGALRM, stop_cycle)
+            signal.setitimer(signal.ITIMER_REAL, max_seconds)
+            calls = 0
+            try:
+                while not cycle['stopped']:
+                    method(*args, **kwargs)
+                    calls += 1
+            finally:
+                signal.signal(signal.SIGALRM, signal.SIG_DFL)
+                signal.setitimer(signal.ITIMER_REAL, 0)
 
-        _set_metainfo(wrapper, 'calls', calculate_calls)
+            return calls
+
         return wrapper
 
     if func is None:
@@ -114,7 +103,15 @@ class TimeoutError(Exception):
 
 
 def deferred(func=None, max_seconds=120):
-    """Wraps up deferred function to become synchronous with reactor stop/start around."""
+    """
+    Wraps up deferred function to become synchronous with reactor stop/start around.
+
+    Every deferred action should be wrapped up with this decorator before passing them to
+    benchmark runner (because it's synchronous).
+
+    @param max_seconds: maximum running time for reactor
+    @type max_seconds: C{int}
+    """
 
     def _deferred(func):
         @wraps(func)
@@ -168,7 +165,23 @@ def deferred(func=None, max_seconds=120):
 
 
 def async(func=None, concurrency=1, requests=1000):
-    def _deferred(func):
+    """
+    Asynchronous benchmark runner.
+
+    Runs wrapped deferred action with concurrency and limiting number of requests.
+
+    Example::
+
+        @async(concurrency=10)
+        def benchmark_example():
+            return defer.succeed(None)
+
+    @param concurrency: maximum number of concurrent actions
+    @type concurrency: C{int}
+    @param requests: overall number of calls to perform
+    @type requests: C{int}
+    """
+    def _async(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
             from twisted.internet import defer, task
@@ -182,7 +195,7 @@ def async(func=None, concurrency=1, requests=1000):
                     sem.release()
 
                     if req['left'] == 0 and sem.tokens == concurrency:
-                        d.callback(None)
+                        d.callback(requests)
 
                     return _
 
@@ -203,10 +216,9 @@ def async(func=None, concurrency=1, requests=1000):
 
             return d
 
-        _set_metainfo(wrapper, 'calls', requests)
         return wrapper
 
     if func is None:
-        return _deferred
+        return _async
     else:
-        return _deferred(func)
+        return _async(func)
