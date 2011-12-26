@@ -3,10 +3,34 @@ from __future__ import division, absolute_import
 from twisted.internet import defer, reactor
 import unittest
 
-from ..decorators import deferred, TimeoutError, ReactorError
+from ..decorators import calls, seconds, deferred, TimeoutError, ReactorError
 
 
 class DecoratorTestCase(unittest.TestCase):
+
+    def test_calls(self):
+        res = {'n': 0}
+
+        @calls(5)
+        def f():
+            res['n'] += 1
+            return -1
+
+        self.assertEqual(f(), 5)
+        self.assertEqual(res['n'], 5)
+
+    def test_seconds(self):
+        res = {'n': 0}
+
+        @seconds(max_seconds=0.1)
+        def f():
+            res['n'] += 1
+            import time
+            time.sleep(0.01)
+
+        calls = f()
+        self.assertTrue(1 < calls < 15)
+        self.assertEqual(calls, res['n'])
 
     def test_deferred_syncronous_result(self):
         @deferred

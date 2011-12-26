@@ -106,18 +106,104 @@ class ReactorError(Exception):
     pass
 
 
-def deferred(func=None, max_seconds=120):
+def deferred(func_or_class=None, max_seconds=120):
     """
-    Wraps up deferred function to become synchronous with reactor stop/start around.
+    Class or function decorator that makes deferred synchronous with reactor stop/start around.
 
-    Every deferred action should be wrapped up with this decorator before passing them to
-    benchmark runner (because it's synchronous).
+    For function: wraps up deferred function to become synchronous with reactor stop/start around.
+
+    For class: wraps up all class methods starting with 'benchmark_' with deferred decorator, makes
+    setUp and tearDown deferred and run inside the same reactor start/stop pair.
 
     @param max_seconds: maximum running time for reactor
     @type max_seconds: C{int}
     """
 
-    def _deferred(func):
+    def _deferred(func_or_class):
+        if isinstance(func_or_class, type):
+            klass = func_or_class
+            setUp = klass.setUp
+            tearDown = klass.tearDown
+
+            klass.setUp = lambda self: None
+            klass.tearDown = lambda self: None
+
+            for method in dir(klass):
+                if method.startswith('benchmark_'):
+                    setattr(klass, method, deferred(max_seconds=max_seconds)(deferred_setup_teardown(setUp=setUp, tearDown=tearDown)(getattr(klass, method))))
+
+            return klass
+        else:
+            func = func_or_class
+
+            @wraps(func)
+            def wrapper(*args, **kwargs):
+                """
+                Waits for deffered to callback.
+
+                @type d: deferred; otherwise returns it as is.
+                """
+                from twisted.internet import defer, reactor
+
+                d = func(*args, **kwargs)
+
+                if not isinstance(d, defer.Deferred):
+                    return d
+
+                res = {}
+
+                def store_result(result):
+                    res['result'] = result
+
+                def store_exception(failure):
+                    res['exception'] = failure.value
+
+                d.addCallbacks(store_result, store_exception)
+
+                def stop_reactor(_):
+                    if timeout_guard.active():
+                        timeout_guard.cancel()
+
+                    reactor.iterate(0)
+
+                    reactor.disconnectAll()
+                    reactor.crash()
+
+                    if len(reactor.getDelayedCalls()) != 0:
+                        calls = reactor.getDelayedCalls()
+
+                        for call in calls:
+                            call.cancel()
+
+                        res['exception'] = ReactorError("Reactor unclean: delayed calls %s" % (map(str, calls), ))
+
+                timeout_guard = reactor.callLater(max_seconds,
+                    lambda: d.errback(TimeoutError("%r is still running after %d seconds" % (d, max_seconds))))
+                reactor.callWhenRunning(d.addCallback, stop_reactor)
+                reactor.run()
+
+                if 'exception' in res:
+                    raise res['exception']
+
+                return res['result']
+
+            return wrapper
+
+    if func_or_class is None:
+        return _deferred
+    else:
+        return _deferred(func_or_class)
+
+
+def deferred_setup_teardown(setUp=None, tearDown=None):
+    """
+    @param setUp: function to be called before running the deferred
+    @type setUp: C{func}
+    @param tearDown: function to be called after running the deferred
+    @type tearDown: C{func}
+    """
+    def _deferred_setup_teardown(func):
+
         @wraps(func)
         def wrapper(*args, **kwargs):
             """
@@ -125,63 +211,23 @@ def deferred(func=None, max_seconds=120):
 
             @type d: deferred; otherwise returns it as is.
             """
+            from twisted.internet import defer
 
-            from twisted.internet import defer, reactor
-
-            d = func(*args, **kwargs)
-
-            if not isinstance(d, defer.Deferred):
-                return d
-
-            res = {}
-
-            def store_result(result):
-                res['result'] = result
-
-            def store_exception(failure):
-                res['exception'] = failure.value
-
-            d.addCallbacks(store_result, store_exception)
-
-            def stop_reactor(_):
-                if timeout_guard.active():
-                    timeout_guard.cancel()
-
-                reactor.disconnectAll()
-                reactor.crash()
-
-                if len(reactor.getDelayedCalls()) != 0:
-                    calls = reactor.getDelayedCalls()
-
-                    for call in calls:
-                        call.cancel()
-
-                    res['exception'] = ReactorError("Reactor unclean: delayed calls %r" % (calls, ))
-
-            if not d.called:
-                timeout_guard = reactor.callLater(max_seconds,
-                    lambda: d.errback(TimeoutError("%r is still running after %d seconds" % (d, max_seconds))))
-                d.addCallback(stop_reactor)
-                reactor.run()
-
-            if 'exception' in res:
-                raise res['exception']
-
-            return res['result']
+            return defer.maybeDeferred(setUp, *args, **kwargs).addCallback(lambda _: func(*args, **kwargs) \
+                    .addBoth(lambda result: defer.maybeDeferred(tearDown, *args, **kwargs).addCallback(lambda _: result)))
 
         return wrapper
 
-    if func is None:
-        return _deferred
-    else:
-        return _deferred(func)
+    return _deferred_setup_teardown
 
 
-def async(func=None, concurrency=1, requests=1000):
+def async(func=None, concurrency=1, requests=None, duration=None):
     """
     Asynchronous benchmark runner.
 
-    Runs wrapped deferred action with concurrency and limiting number of requests.
+    Runs wrapped deferred action with concurrency and limiting number of requests OR test duration.
+
+    One of C{requests} or C{duration} should be specified, but not both.
 
     Example::
 
@@ -193,22 +239,37 @@ def async(func=None, concurrency=1, requests=1000):
     @type concurrency: C{int}
     @param requests: overall number of calls to perform
     @type requests: C{int}
+    @param duration: length of test in seconds
+    @type duration: C{float}
     """
+    assert requests is not None or duration is not None, "either duration or requests should be specified"
+    assert requests is None or duration is None, "can't specify both duration and requests"
+
     def _async(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            from twisted.internet import defer, task
+            from twisted.internet import defer, task, reactor
 
             d = defer.Deferred()
             sem = defer.DeferredSemaphore(concurrency)
-            req = { 'left': requests }
+            req = {'done': 0}
+            if requests is not None:
+                req['left'] = requests
+            else:
+                def finish():
+                    starter.stop()
+                    if sem.tokens == concurrency:
+                        d.callback(req['done'])
+
+                reactor.callLater(duration, finish)
 
             def startMore():
                 def release(_):
+                    req['done'] += 1
                     sem.release()
 
-                    if req['left'] == 0 and sem.tokens == concurrency:
-                        d.callback(requests)
+                    if not starter.running and sem.tokens == concurrency:
+                        d.callback(req['done'])
 
                     return _
 
@@ -218,9 +279,10 @@ def async(func=None, concurrency=1, requests=1000):
                 def acquired(_):
                     defer.maybeDeferred(func, *args, **kwargs).addErrback(gotError).addBoth(release)
 
-                req['left'] -= 1
-                if req['left'] == 0:
-                    starter.stop()
+                if requests is not None:
+                    req['left'] -= 1
+                    if req['left'] == 0:
+                        starter.stop()
 
                 return sem.acquire().addCallback(acquired)
 

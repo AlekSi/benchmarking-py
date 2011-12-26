@@ -1,11 +1,13 @@
 from __future__ import division, print_function, absolute_import
 
 from .case import BenchmarkCase
-from .decorators import calls, seconds, repeats, data, data_function, deferred, deferred_data_function, async
+from .decorators import calls, seconds, repeats, data, data_function, deferred, deferred_setup_teardown, \
+            deferred_data_function, async
 
 
 __all__ = ['BenchmarkCase',
-           'calls', 'seconds', 'repeats', 'data', 'data_function', 'deferred', 'deferred_data_function', 'async']
+           'calls', 'seconds', 'repeats', 'data', 'data_function', 'deferred', 'deferred_setup_teardown',
+           'deferred_data_function', 'async']
 
 
 def main(reporter=None, classes=None):

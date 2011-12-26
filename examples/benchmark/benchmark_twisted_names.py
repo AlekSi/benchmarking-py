@@ -1,3 +1,7 @@
+"""
+Benchmark on Twisted Names subsystem.
+"""
+
 from twisted.names.dns import DNSDatagramProtocol
 from twisted.names.server import DNSServerFactory
 from twisted.names import hosts, client
@@ -6,6 +10,7 @@ from twisted.internet import reactor
 import benchmarking
 
 
+@benchmarking.deferred(max_seconds=5)
 class TwistedNamesBenchmarkCase(benchmarking.BenchmarkCase):
     def setUp(self):
         controller = DNSServerFactory([hosts.Resolver()])
@@ -14,11 +19,10 @@ class TwistedNamesBenchmarkCase(benchmarking.BenchmarkCase):
         self._timeout = 1
 
     def tearDown(self):
-        self._port.stopListening()
+        return self._port.stopListening()
 
-    @benchmarking.repeats(10)
-    @benchmarking.deferred
-    @benchmarking.async(concurrency=100, requests=10000)
+    @benchmarking.repeats(15)
+    @benchmarking.async(concurrency=10, duration=1)
     def benchmark_run(self):
         return self._resolver.lookupAddress(
             'localhost', timeout=(self._timeout,))
