@@ -10,19 +10,19 @@ envs:
 	virtualenv --no-site-packages -p python3.2 env_32
 	virtualenv --no-site-packages -p pypy env_pypy
 
-        for e in env_27 env_32 env_pypy; \
-        do \
-                $$e/bin/pip install Twisted codespeed-client pyflakes pep8; \
-        done
+	for e in env_27 env_32 env_pypy; \
+	do \
+		$$e/bin/pip install Twisted codespeed-client pyflakes pep8; \
+	done
 
 test:
 	python -m unittest discover -v
 
 test_all:
-        for e in env_27 env_32 env_pypy; \
-        do \
-                $$e/bin/python -m unittest discover -v; \
-        done
+	for e in env_27 env_32 env_pypy; \
+	do \
+		$$e/bin/python -m unittest discover -v; \
+	done
 
 flakes:
 	-pyflakes benchmarking examples
