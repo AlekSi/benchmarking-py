@@ -279,6 +279,9 @@ def async(func=None, concurrency=1, requests=None, duration=None):
                 def acquired(_):
                     defer.maybeDeferred(func, *args, **kwargs).addErrback(gotError).addBoth(release)
 
+                    if sem.tokens > 0:
+                        startMore()
+
                 if requests is not None:
                     req['left'] -= 1
                     if req['left'] == 0:
