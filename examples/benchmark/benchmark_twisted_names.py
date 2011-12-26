@@ -10,7 +10,7 @@ from twisted.internet import reactor
 import benchmarking
 
 
-@benchmarking.deferred(max_seconds=5)
+@benchmarking.deferred(max_seconds=15)
 class TwistedNamesBenchmarkCase(benchmarking.BenchmarkCase):
     def setUp(self):
         controller = DNSServerFactory([hosts.Resolver()])
@@ -22,7 +22,7 @@ class TwistedNamesBenchmarkCase(benchmarking.BenchmarkCase):
         return self._port.stopListening()
 
     @benchmarking.repeats(15)
-    @benchmarking.async(concurrency=10, duration=1)
+    @benchmarking.async(concurrency=10, duration=5)
     def benchmark_run(self):
         return self._resolver.lookupAddress(
             'localhost', timeout=(self._timeout,))
