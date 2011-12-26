@@ -11,9 +11,9 @@ class ValueReporter(Reporter):
     def __init__(self):
         self.results = {}
 
-    def after_benchmark(self, method_name, data, calls, results):
+    def after_benchmark(self, method_name, data, results):
         self.results.setdefault(method_name, dict())
-        self.results[method_name][data] = (calls, results)
+        self.results[method_name][data] = results
 
     def after_run(self):
         return self.results

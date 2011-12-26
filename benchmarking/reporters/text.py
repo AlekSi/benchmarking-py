@@ -23,13 +23,13 @@ class TextReporter(Reporter):
         sys.stdout.flush()
 
     def after_repeat(self, method_name, data_label, current, total, calls, result):
-        print('%f usec per call' % (result * 1000000 / calls))
+        print('%f usec per call (%d calls)' % (result * 1000000 / calls, calls))
 
     def before_benchmark(self, method_name, data_label):
         print('%s(%r)' % (method_name, data_label), end=':\n')
         sys.stdout.flush()
 
-    def after_benchmark(self, method_name, data, calls, results):
+    def after_benchmark(self, method_name, data, results):
         repeats = len(results)
-        print("  %d calls per repeat, best of %d repeats: %f usec per call" % (calls, repeats, self.min_max_time_per_call(calls, results)[0] * 1000000))
+        print("  %.2f calls per repeat, best of %d repeats: %f usec per call" % (sum(i[0] for i in results) / repeats, repeats, self.min_max_time_per_call(results)[0] * 1000000))
         sys.stdout.flush()

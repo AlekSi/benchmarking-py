@@ -11,20 +11,22 @@ class Reporter(object):
         return cls.__name__.replace('Reporter', '')
 
     @staticmethod
-    def min_max_time_per_call(calls, results):
-        return (min(results) / calls, max(results) / calls)
+    def min_max_time_per_call(results):
+        times_per_call = Reporter.times_per_call(results)
+        return (min(times_per_call), max(times_per_call))
 
     @staticmethod
-    def times_per_call(calls, results):
-        return [time / calls for time in results]
+    def times_per_call(results):
+        return [time / calls for calls, time in results]
 
     @staticmethod
-    def min_max_speed(calls, results):
-        return (calls / max(results), calls / min(results))
+    def min_max_speed(results):
+        speeds = Reporter.speeds(results)
+        return (min(speeds), max(speeds))
 
     @staticmethod
-    def speeds(calls, results):
-        return [calls / time for time in results]
+    def speeds(results):
+        return [calls / time for calls, time in results]
 
     def before_repeat(self, method_name, data_label, current, total):
         """
@@ -59,19 +61,18 @@ class Reporter(object):
         """
         assert isinstance(method_name, str)
 
-    def after_benchmark(self, method_name, data_key, calls, results):
+    def after_benchmark(self, method_name, data_key, results):
         """
         @param method_name: benchmark method name
         @param data_key: benchmark method argument label
-        @param calls: number of benchmark method calls per repeat
-        @param results: number of seconds per each repeat
+        @param results: number of (calls, seconds) per each repeat
         @type results: C{list}
         """
         assert isinstance(method_name, str)
-        assert isinstance(calls, int)
         assert isinstance(results, list)
         for i in results:
-            assert isinstance(i, float)
+            assert isinstance(i[0], int)
+            assert isinstance(i[1], float)
 
     def after_run(self):
         pass

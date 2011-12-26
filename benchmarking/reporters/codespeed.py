@@ -21,12 +21,12 @@ class CodeSpeedReporter(Reporter):
 
         self.client = Client(root_url, **kwargs)
 
-    def after_benchmark(self, method_name, data, calls, results):
+    def after_benchmark(self, method_name, data, results):
         if self.less_is_better:
-            min_value, max_value = self.min_max_time_per_call(calls, results)  # less is better - default for new CodeSpeed benchmarks
+            min_value, max_value = self.min_max_time_per_call(results)  # less is better - default for new CodeSpeed benchmarks
             value = min_value
         else:
-            min_value, max_value = self.min_max_speed(calls, results)
+            min_value, max_value = self.min_max_speed(results)
             value = max_value
 
         project, benchmark = method_name.split('.')
