@@ -156,11 +156,12 @@ def deferred(func_or_class=None, max_seconds=120):
                     res['result'] = result
 
                 def store_exception(failure):
+                    print failure
                     res['exception'] = failure.value
 
                 d.addCallbacks(store_result, store_exception)
 
-                def stop_reactor(_):
+                def stop_reactor():
                     if timeout_guard.active():
                         timeout_guard.cancel()
 
@@ -175,11 +176,12 @@ def deferred(func_or_class=None, max_seconds=120):
                         for call in calls:
                             call.cancel()
 
-                        res['exception'] = ReactorError("Reactor unclean: delayed calls %s" % (map(str, calls), ))
+                        if 'exception' not in res:
+                            res['exception'] = ReactorError("Reactor unclean: delayed calls %s" % (map(str, calls), ))
 
                 timeout_guard = reactor.callLater(max_seconds,
                     lambda: d.errback(TimeoutError("%r is still running after %d seconds" % (d, max_seconds))))
-                reactor.callWhenRunning(d.addCallback, stop_reactor)
+                reactor.callWhenRunning(d.addCallback, lambda _: reactor.callLater(0, stop_reactor))
                 reactor.run()
 
                 if 'exception' in res:
