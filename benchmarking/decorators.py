@@ -156,7 +156,6 @@ def deferred(func_or_class=None, max_seconds=120):
                     res['result'] = result
 
                 def store_exception(failure):
-                    print failure
                     res['exception'] = failure.value
 
                 d.addCallbacks(store_result, store_exception)
