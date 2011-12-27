@@ -196,7 +196,7 @@ def deferred(func_or_class=None, max_seconds=120):
         return _deferred(func_or_class)
 
 
-def deferred_setup_teardown(setUp=None, tearDown=None):
+def deferred_setup_teardown(setUp, tearDown):
     """
     @param setUp: function to be called before running the deferred
     @type setUp: C{func}
@@ -214,8 +214,8 @@ def deferred_setup_teardown(setUp=None, tearDown=None):
             """
             from twisted.internet import defer
 
-            return defer.maybeDeferred(setUp, *args, **kwargs).addCallback(lambda _: func(*args, **kwargs) \
-                    .addBoth(lambda result: defer.maybeDeferred(tearDown, *args, **kwargs).addCallback(lambda _: result)))
+            return defer.maybeDeferred(setUp, args[0]).addCallback(lambda _: func(*args, **kwargs) \
+                    .addBoth(lambda result: defer.maybeDeferred(tearDown, args[0]).addCallback(lambda _: result)))
 
         return wrapper
 
@@ -278,9 +278,9 @@ def async(func=None, concurrency=1, requests=None, duration=None):
                     d.errback(fail)
 
                 def acquired(_):
-                    defer.maybeDeferred(func, *args, **kwargs).addErrback(gotError).addBoth(release)
+                    d = defer.maybeDeferred(func, *args, **kwargs).addErrback(gotError).addBoth(release)
 
-                    if sem.tokens > 0:
+                    if sem.tokens > 0 and not d.called:
                         startMore()
 
                 if requests is not None:
