@@ -169,6 +169,9 @@ def deferred(func_or_class=None, max_seconds=120):
                     reactor.disconnectAll()
                     reactor.crash()
 
+                    if reactor.threadpool is not None:
+                        reactor._stopThreadPool()
+
                     if len(reactor.getDelayedCalls()) != 0:
                         calls = reactor.getDelayedCalls()
 
@@ -275,7 +278,10 @@ def async(func=None, concurrency=1, requests=None, duration=None):
                     return _
 
                 def gotError(fail):
-                    d.errback(fail)
+                    if not d.called:
+                        d.errback(fail)
+                    else:
+                        print fail
 
                 def acquired(_):
                     d = defer.maybeDeferred(func, *args, **kwargs).addErrback(gotError).addBoth(release)
