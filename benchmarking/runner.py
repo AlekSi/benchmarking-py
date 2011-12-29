@@ -5,7 +5,7 @@ import time
 
 from .suite import BenchmarkSuite
 from .decorators import _get_metainfo
-from .util import _no_data, range
+from .util import _no_data, range, class_from_instancemethod
 
 
 class BenchmarkRunner(object):
@@ -21,13 +21,7 @@ class BenchmarkRunner(object):
         Return instancemethod's name as string.
         """
 
-        try:
-            klass = instancemethod.__self__.__class__
-        except AttributeError:
-            # for old CPython, PyPy 1.5
-            klass = instancemethod.im_class
-
-        return '%s.%s' % (klass.__name__, instancemethod.__name__)
+        return '%s.%s' % (class_from_instancemethod(instancemethod).__name__, instancemethod.__name__)
 
     def run_repeat(self, method, data):
         """

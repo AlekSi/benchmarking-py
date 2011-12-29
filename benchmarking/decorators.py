@@ -3,7 +3,7 @@ from __future__ import division, print_function, absolute_import
 import signal
 from functools import wraps
 
-from .util import range
+from .util import range, class_from_instancemethod
 
 
 def _set_metainfo(method, key, value):
@@ -13,7 +13,7 @@ def _set_metainfo(method, key, value):
 
 def _get_metainfo(method, key):
     key = '_benchmarking_%s' % key
-    return getattr(method, key, None)
+    return getattr(method, key, getattr(class_from_instancemethod(method), key, None))
 
 
 def calls(number):

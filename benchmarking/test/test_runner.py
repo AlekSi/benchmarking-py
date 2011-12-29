@@ -14,6 +14,7 @@ def count(obj, key, inc=1):
     setattr(obj, key, getattr(obj, key, 0) + inc)
 
 
+@repeats(1)
 class RunnerBenchmarkCase(BenchmarkCase):
     @classmethod
     def setUpClass(cls):
@@ -64,7 +65,6 @@ class RunnerBenchmarkCase(BenchmarkCase):
     def benchmark_4(self, inc):
         count(self, 'count_benchmark_4', inc)
 
-    @repeats(1)
     @seconds(max_seconds=1)
     def benchmark_5(self):
         count(self, 'count_benchmark_5')
