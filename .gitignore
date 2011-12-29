@@ -1,2 +1,4 @@
 MANIFEST
 dist/
+.download_cache/
+.coverage
