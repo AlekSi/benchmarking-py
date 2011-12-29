@@ -67,10 +67,10 @@ class BenchmarkRunner(object):
         for n in range(repeats):
             instance.setUp()
 
-            self.reporter.before_repeat(full_method_name, data_label, n + 1, repeats)
+            self.reporter.before_repeat(method_name=full_method_name, data_label=data_label, current=(n + 1), total=repeats)
             result, called = self.run_repeat(method, data)
             total.append((called, result))
-            self.reporter.after_repeat(full_method_name, data_label, n + 1, repeats, called, result)
+            self.reporter.after_repeat(method_name=full_method_name, data_label=data_label, current=(n + 1), total=repeats, calls=called, result=result)
 
             instance.tearDown()
 
@@ -85,9 +85,9 @@ class BenchmarkRunner(object):
 
         data_function = _get_metainfo(method, 'data_function') or (lambda: ((_no_data, _no_data),))
         for (data_label, data) in data_function():
-            self.reporter.before_benchmark(full_method_name, data_label)
+            self.reporter.before_benchmark(method_name=full_method_name, data_label=data_label)
             total = self.run_benchmark(instance, method, data_label, data)
-            self.reporter.after_benchmark(full_method_name, data_label, total)
+            self.reporter.after_benchmark(method_name=full_method_name, data_label=data_label, results=total)
 
     def run(self, classes):
         """

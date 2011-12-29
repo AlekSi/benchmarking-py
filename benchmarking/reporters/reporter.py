@@ -61,10 +61,10 @@ class Reporter(object):
         """
         assert isinstance(method_name, str)
 
-    def after_benchmark(self, method_name, data_key, results):
+    def after_benchmark(self, method_name, data_label, results):
         """
         @param method_name: benchmark method name
-        @param data_key: benchmark method argument label
+        @param data_label: benchmark method argument label
         @param results: number of (calls, seconds) per each repeat
         @type results: C{list}
         """
