@@ -12,7 +12,7 @@ envs:
 	
 	for e in env_27 env_32 env_pypy; \
 	do \
-		$$e/bin/pip install Twisted codespeed-client pyflakes pep8; \
+		$$e/bin/pip install Twisted codespeed-client coverage pyflakes pep8; \
 	done
 
 test:
@@ -23,6 +23,14 @@ test_all:
 	do \
 		$$e/bin/python -m unittest discover -v; \
 	done
+
+coverage:
+	rm -rf coverage_html .coverage
+	mkdir coverage_html
+	
+	coverage run --source=benchmarking -m unittest discover -v
+	coverage html --omit='*/test/*.py' -d coverage_html
+	coverage report -m --omit='*/test/*.py'
 
 flakes:
 	-pyflakes benchmarking examples
