@@ -9,5 +9,4 @@ class NoData(object):
 _no_data = NoData()
 
 
-if sys.version_info.major < 3:
-    range = xrange
+range = xrange if sys.version_info.major < 3 else range

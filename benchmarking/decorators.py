@@ -1,3 +1,5 @@
+from __future__ import division, print_function, absolute_import
+
 import signal
 from functools import wraps
 
@@ -281,7 +283,7 @@ def async(func=None, concurrency=1, requests=None, duration=None):
                     if not d.called:
                         d.errback(fail)
                     else:
-                        print fail
+                        print(fail)
 
                 def acquired(_):
                     d = defer.maybeDeferred(func, *args, **kwargs).addErrback(gotError).addBoth(release)
