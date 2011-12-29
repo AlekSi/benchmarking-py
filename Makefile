@@ -5,7 +5,6 @@ all: test flakes pep8 benchmark
 
 envs:
 	rm -fr env_*
-	#virtualenv --no-site-packages -p python2.6 env_26
 	virtualenv --no-site-packages -p python2.7 env_27
 	virtualenv --no-site-packages -p python3.2 env_32
 	virtualenv --no-site-packages -p pypy env_pypy
