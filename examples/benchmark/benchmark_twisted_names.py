@@ -24,5 +24,4 @@ class TwistedNamesBenchmarkCase(benchmarking.BenchmarkCase):
     @benchmarking.repeats(15)
     @benchmarking.async(concurrency=10, duration=5)
     def benchmark_run(self):
-        return self._resolver.lookupAddress(
-            'localhost', timeout=(self._timeout,))
+        return self._resolver.lookupAddress('localhost', timeout=(self._timeout,))
