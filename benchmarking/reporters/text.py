@@ -29,7 +29,7 @@ class TextReporter(Reporter):
         print('%s(%r)' % (method_name, data_label), end=':\n')
         sys.stdout.flush()
 
-    def after_benchmark(self, method_name, data, results):
+    def after_benchmark(self, method_name, data_label, results):
         repeats = len(results)
         print("  %.2f calls per repeat, best of %d repeats: %f usec per call" % (sum(i[0] for i in results) / repeats, repeats, self.min_max_time_per_call(results)[0] * 1000000))
         sys.stdout.flush()
