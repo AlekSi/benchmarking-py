@@ -10,8 +10,9 @@ from twisted.internet import reactor
 import benchmarking
 
 
+@benchmarking.project("Twisted")
 @benchmarking.deferred(max_seconds=15)
-class TwistedNamesBenchmarkCase(benchmarking.BenchmarkCase):
+class ResolverBenchmarkCase(benchmarking.BenchmarkCase):
     def setUp(self):
         controller = DNSServerFactory([hosts.Resolver()])
         self._port = reactor.listenUDP(0, DNSDatagramProtocol(controller))
@@ -23,5 +24,5 @@ class TwistedNamesBenchmarkCase(benchmarking.BenchmarkCase):
 
     @benchmarking.repeats(15)
     @benchmarking.async(concurrency=10, duration=5)
-    def benchmark_run(self):
+    def benchmark_lookup(self):
         return self._resolver.lookupAddress('localhost', timeout=(self._timeout,))

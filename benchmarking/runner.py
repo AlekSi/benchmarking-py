@@ -21,8 +21,13 @@ class BenchmarkRunner(object):
         Return project and benchmark from instancemethod for reporter.
         """
 
-        project = _get_metainfo(instancemethod, 'project') or class_from_instancemethod(instancemethod).__name__
-        benchmark = instancemethod.__name__
+        class_name = class_from_instancemethod(instancemethod).__name__.replace('BenchmarkCase', '')
+        benchmark = instancemethod.__name__.replace('benchmark_' , '')
+        project = _get_metainfo(instancemethod, 'project')
+        if project:
+            benchmark = class_name.lower() + '_' + benchmark
+        else:
+            project = class_name
         return {'project': project, 'benchmark': benchmark}
 
     def run_repeat(self, method, data):
