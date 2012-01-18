@@ -16,6 +16,15 @@ def _get_metainfo(method, key):
     return getattr(method, key, getattr(class_from_instancemethod(method), key, None))
 
 
+def project(name):
+    """Set project name."""
+
+    def f(method):
+        _set_metainfo(method, 'project', name)
+        return method
+    return f
+
+
 def calls(number):
     """Specifies a number of benchmark method calls per single repeat."""
 
@@ -38,8 +47,10 @@ def seconds(func=None, max_seconds=3):
         @wraps(method)
         def wrapper(*args, **kwargs):
             cycle = {'stopped': False}
+
             def stop_cycle(_, __):
                 cycle['stopped'] = True
+
             signal.signal(signal.SIGALRM, stop_cycle)
             signal.setitimer(signal.ITIMER_REAL, max_seconds)
             calls = 0

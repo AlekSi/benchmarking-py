@@ -16,12 +16,14 @@ class BenchmarkRunner(object):
         self.timer_func = time.time
 
     @staticmethod
-    def _full_method_name(instancemethod):
+    def _project_and_benchmark(instancemethod):
         """
-        Return instancemethod's name as string.
+        Return project and benchmark from instancemethod for reporter.
         """
 
-        return '%s.%s' % (class_from_instancemethod(instancemethod).__name__, instancemethod.__name__)
+        project = _get_metainfo(instancemethod, 'project') or class_from_instancemethod(instancemethod).__name__
+        benchmark = instancemethod.__name__
+        return {'project': project, 'benchmark': benchmark}
 
     def run_repeat(self, method, data):
         """
@@ -61,16 +63,16 @@ class BenchmarkRunner(object):
 
         repeats = _get_metainfo(method, 'repeats') or self.repeats
 
-        full_method_name = self._full_method_name(method)
+        project_and_benchmark = self._project_and_benchmark(method)
 
         total = []
         for n in range(repeats):
             instance.setUp()
 
-            self.reporter.before_repeat(method_name=full_method_name, data_label=data_label, current=(n + 1), total=repeats)
+            self.reporter.before_repeat(data_label=data_label, current=(n + 1), total=repeats, **project_and_benchmark)
             result, called = self.run_repeat(method, data)
             total.append((called, result))
-            self.reporter.after_repeat(method_name=full_method_name, data_label=data_label, current=(n + 1), total=repeats, calls=called, result=result)
+            self.reporter.after_repeat(data_label=data_label, current=(n + 1), total=repeats, calls=called, result=result, **project_and_benchmark)
 
             instance.tearDown()
 
@@ -81,13 +83,13 @@ class BenchmarkRunner(object):
         Run instance method with all data.
         """
 
-        full_method_name = self._full_method_name(method)
+        project_and_benchmark = self._project_and_benchmark(method)
 
         data_function = _get_metainfo(method, 'data_function') or (lambda: ((_no_data, _no_data),))
         for (data_label, data) in data_function():
-            self.reporter.before_benchmark(method_name=full_method_name, data_label=data_label)
+            self.reporter.before_benchmark(data_label=data_label, **project_and_benchmark)
             total = self.run_benchmark(instance, method, data_label, data)
-            self.reporter.after_benchmark(method_name=full_method_name, data_label=data_label, results=total)
+            self.reporter.after_benchmark(data_label=data_label, results=total, **project_and_benchmark)
 
     def run(self, classes):
         """

@@ -4,6 +4,7 @@ from examples.fibonacci import FibonacciRecursive, FibonacciRecursiveMemo, Fibon
                                FibonacciMatrix
 
 
+@benchmarking.project("Fibo")
 class FibonacciBenchmarkCase(benchmarking.BenchmarkCase):
     @benchmarking.repeats(3)
     @benchmarking.calls(500)

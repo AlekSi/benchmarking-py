@@ -28,47 +28,55 @@ class Reporter(object):
     def speeds(results):
         return [calls / time for calls, time in results]
 
-    def before_repeat(self, method_name, data_label, current, total):
+    def before_repeat(self, project, benchmark, data_label, current, total):
         """
-        @param method_name: benchmark method name
+        @param project: used for grouping
+        @param benchmark: benchmark method name
         @param data_label: benchmark method argument label
         @param current: number of current repeat
         @param total: total number of repeats
         """
-        assert isinstance(method_name, str)
+        assert isinstance(project, str)
+        assert isinstance(benchmark, str)
         assert isinstance(current, int)
         assert isinstance(total, int)
 
-    def after_repeat(self, method_name, data_label, current, total, calls, result):
+    def after_repeat(self, project, benchmark, data_label, current, total, calls, result):
         """
-        @param method_name: benchmark method name
+        @param project: used for grouping
+        @param benchmark: benchmark method name
         @param data_label: benchmark method argument label
         @param current: number of current repeat
         @param total: total number of repeats
         @param calls: number of calls per repeat
         @param result: number of seconds for current repeat
         """
-        assert isinstance(method_name, str)
+        assert isinstance(project, str)
+        assert isinstance(benchmark, str)
         assert isinstance(current, int)
         assert isinstance(total, int)
         assert isinstance(calls, int)
         assert isinstance(result, float)
 
-    def before_benchmark(self, method_name, data_label):
+    def before_benchmark(self, project, benchmark, data_label):
         """
-        @param method_name: benchmark method name
+        @param project: used for grouping
+        @param benchmark: benchmark method name
         @param data_label: benchmark method argument label
         """
-        assert isinstance(method_name, str)
+        assert isinstance(project, str)
+        assert isinstance(benchmark, str)
 
-    def after_benchmark(self, method_name, data_label, results):
+    def after_benchmark(self, project, benchmark, data_label, results):
         """
-        @param method_name: benchmark method name
+        @param project: used for grouping
+        @param benchmark: benchmark method name
         @param data_label: benchmark method argument label
         @param results: number of (calls, seconds) per each repeat
         @type results: C{list}
         """
-        assert isinstance(method_name, str)
+        assert isinstance(project, str)
+        assert isinstance(benchmark, str)
         assert isinstance(results, list)
         for i in results:
             assert isinstance(i[0], int)
