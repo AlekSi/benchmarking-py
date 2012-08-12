@@ -1,10 +1,9 @@
 import unittest
 
-from examples.fibonacci import FibonacciRecursive, FibonacciRecursiveMemo, FibonacciIterational, \
-                               FibonacciMatrix
+from examples.fibonacci import FibonacciRecursive, FibonacciRecursiveMemo, FibonacciIterational, FibonacciMatrix
 
 import sys
-if sys.version_info.major == 3:
+if sys.version_info[0] == 3:
     xrange = range
 
 

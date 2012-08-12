@@ -1,7 +1,7 @@
 from __future__ import division, print_function, absolute_import
 
 import sys
-if sys.version_info.major < 3:
+if sys.version_info[0] < 3:
     import repr as reprlib
 else:
     import reprlib
@@ -23,7 +23,7 @@ class TextReporter(Reporter):
         sys.stdout.flush()
 
     def after_repeat(self, project, benchmark, data_label, current, total, calls, result):
-        print('%f usec per call (%d calls)' % (result * 1000000 / calls, calls))
+        print('%f usec per call (%f seconds, %d calls)' % (result * 1000000 / calls, result, calls))
 
     def before_benchmark(self, project, benchmark, data_label):
         print('%s.%s(%r)' % (project, benchmark, data_label), end=':\n')

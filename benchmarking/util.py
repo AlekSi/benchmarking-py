@@ -9,7 +9,7 @@ class NoData(object):
 _no_data = NoData()
 
 
-range = xrange if sys.version_info.major < 3 else range
+range = xrange if sys.version_info[0] < 3 else range
 
 
 def class_from_instancemethod(instancemethod):

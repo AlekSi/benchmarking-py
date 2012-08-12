@@ -21,7 +21,7 @@ class BenchmarkRunner(object):
         """
 
         class_name = class_from_instancemethod(instancemethod).__name__.replace('BenchmarkCase', '')
-        benchmark = instancemethod.__name__.replace('benchmark_' , '')
+        benchmark = instancemethod.__name__.replace('benchmark_', '')
         project = _get_metainfo(instancemethod, 'project')
         if project:
             benchmark = class_name.lower() + '_' + benchmark
@@ -35,7 +35,7 @@ class BenchmarkRunner(object):
 
         @param method: callable to be benchmarked
         @param data: argument for method
-        @return: tupe (number of seconds as C{float}, number of calls as C{int})
+        @return: tuple (number of seconds as C{float}, number of calls as C{int})
         """
 
         gc_enabled = gc.isenabled()

@@ -1,14 +1,13 @@
 from __future__ import division, print_function, absolute_import
 
-import signal
 from functools import wraps
 
 from .util import range, class_from_instancemethod
 
 
-def _set_metainfo(method, key, value):
+def _set_metainfo(obj, key, value):
     key = '_benchmarking_%s' % key
-    setattr(method, key, value)
+    setattr(obj, key, value)
 
 
 def _get_metainfo(method, key):
@@ -19,9 +18,36 @@ def _get_metainfo(method, key):
 def project(name):
     """Set project name."""
 
-    def f(method):
-        _set_metainfo(method, 'project', name)
-        return method
+    def f(obj):
+        _set_metainfo(obj, 'project', name)
+        return obj
+    return f
+
+
+def repeats(number):
+    """Specifies a number of repeats."""
+
+    def f(obj):
+        _set_metainfo(obj, 'repeats', number)
+        return obj
+    return f
+
+
+def data(*args):
+    """Specifies data arguments for benchmark."""
+
+    def f(obj):
+        _set_metainfo(obj, 'data_function', lambda: zip(args, args))
+        return obj
+    return f
+
+
+def data_function(func):
+    """Specifies data function for benchmark."""
+
+    def f(obj):
+        _set_metainfo(obj, 'data_function', func)
+        return obj
     return f
 
 
@@ -40,20 +66,22 @@ def calls(number):
     return f
 
 
-def seconds(func=None, max_seconds=3):
+def seconds(max_seconds):
     """Specifies a number of seconds for single repeat."""
 
     def f(method):
         @wraps(method)
         def wrapper(*args, **kwargs):
+            import signal
+
             cycle = {'stopped': False}
 
-            def stop_cycle(_, __):
+            def stop_cycle(*_):
                 cycle['stopped'] = True
 
+            calls = 0
             signal.signal(signal.SIGALRM, stop_cycle)
             signal.setitimer(signal.ITIMER_REAL, max_seconds)
-            calls = 0
             try:
                 while not cycle['stopped']:
                     method(*args, **kwargs)
@@ -65,37 +93,6 @@ def seconds(func=None, max_seconds=3):
             return calls
 
         return wrapper
-
-    if func is None:
-        return f
-    else:
-        return f(func)
-
-
-def repeats(number):
-    """Specifies a number of repeats."""
-
-    def f(method):
-        _set_metainfo(method, 'repeats', number)
-        return method
-    return f
-
-
-def data(*args):
-    """Specifies data arguments for benchmark."""
-
-    def f(method):
-        _set_metainfo(method, 'data_function', lambda: zip(args, args))
-        return method
-    return f
-
-
-def data_function(func):
-    """Specifies data function for benchmark."""
-
-    def f(method):
-        _set_metainfo(method, 'data_function', func)
-        return method
     return f
 
 
@@ -152,7 +149,7 @@ def deferred(func_or_class=None, max_seconds=120):
             @wraps(func)
             def wrapper(*args, **kwargs):
                 """
-                Waits for deffered to callback.
+                Waits for deferred to callback.
 
                 @type d: deferred; otherwise returns it as is.
                 """
@@ -194,8 +191,8 @@ def deferred(func_or_class=None, max_seconds=120):
                         if 'exception' not in res:
                             res['exception'] = ReactorError("Reactor unclean: delayed calls %s" % (map(str, calls), ))
 
-                timeout_guard = reactor.callLater(max_seconds,
-                    lambda: d.errback(TimeoutError("%r is still running after %d seconds" % (d, max_seconds))))
+                f = lambda: d.errback(TimeoutError("%r is still running after %d seconds" % (d, max_seconds)))
+                timeout_guard = reactor.callLater(max_seconds, f)
                 reactor.callWhenRunning(d.addCallback, lambda _: reactor.callLater(0, stop_reactor))
                 reactor.run()
 
@@ -224,14 +221,21 @@ def deferred_setup_teardown(setUp, tearDown):
         @wraps(func)
         def wrapper(*args, **kwargs):
             """
-            Waits for deffered to callback.
+            Waits for deferred to callback.
 
             @type d: deferred; otherwise returns it as is.
             """
             from twisted.internet import defer
 
-            return defer.maybeDeferred(setUp, args[0]).addCallback(lambda _: func(*args, **kwargs) \
-                    .addBoth(lambda result: defer.maybeDeferred(tearDown, args[0]).addCallback(lambda _: result)))
+            self = args[0]
+
+            def doSetUp():
+                return defer.maybeDeferred(setUp, self)
+
+            def doTearDown(result):
+                return defer.maybeDeferred(tearDown, self).addCallback(lambda _: result)
+
+            return doSetUp().addCallback(lambda _: func(*args, **kwargs).addBoth(doTearDown))
 
         return wrapper
 

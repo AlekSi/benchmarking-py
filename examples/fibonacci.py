@@ -1,7 +1,7 @@
 """Fibonacci numbers computation, taken from http://en.literateprograms.org/Fibonacci_numbers_(Python)"""
 
 import sys
-if sys.version_info.major == 3:
+if sys.version_info[0] == 3:
     xrange = range
 
 

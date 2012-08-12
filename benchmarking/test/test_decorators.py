@@ -22,7 +22,7 @@ class DecoratorTestCase(unittest.TestCase):
     def test_seconds(self):
         res = {'n': 0}
 
-        @seconds(max_seconds=0.1)
+        @seconds(0.1)
         def f():
             res['n'] += 1
             import time
@@ -40,11 +40,10 @@ class DecoratorTestCase(unittest.TestCase):
         self.assertEqual(simple_result(), 1)
 
     def test_deferred_wait_for_deferred(self):
-        @deferred(max_seconds=3)
+        @deferred
         def deferred_result():
             d = defer.Deferred()
             reactor.callLater(0, d.callback, 1)
-
             return d
 
         self.assertEqual(deferred_result(), 1)

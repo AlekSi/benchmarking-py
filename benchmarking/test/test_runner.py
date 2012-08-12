@@ -65,7 +65,7 @@ class RunnerBenchmarkCase(BenchmarkCase):
     def benchmark_4(self, inc):
         count(self, 'count_benchmark_4', inc)
 
-    @seconds(max_seconds=1)
+    @seconds(1)
     def benchmark_5(self):
         count(self, 'count_benchmark_5')
         self.param
