@@ -2,3 +2,4 @@ MANIFEST
 dist/
 .download_cache/
 .coverage
+docs/_build/

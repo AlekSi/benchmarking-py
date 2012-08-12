@@ -2,13 +2,14 @@ from __future__ import division, print_function, absolute_import
 
 from .case import BenchmarkCase
 from .decorators import project, calls, seconds, repeats, data, data_function, deferred, deferred_setup_teardown, \
-            deferred_data_function, async
+    deferred_data_function, async
 
 
 __all__ = ['BenchmarkCase',
            'project', 'calls', 'seconds', 'repeats', 'data', 'data_function', 'deferred', 'deferred_setup_teardown',
            'deferred_data_function', 'async']
 
+version = '0.2.dev'
 
 def main(reporter=None, classes=None):
     """

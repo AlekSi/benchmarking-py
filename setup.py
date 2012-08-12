@@ -2,9 +2,11 @@
 
 from distutils.core import setup
 
+from benchmarking import version
+
 setup(
     name='benchmarking',
-    version='0.0.12',
+    version=version,
     author='Alexey Palazhchenko',
     author_email='alexey.palazhchenko@gmail.com',
     packages=['benchmarking', 'benchmarking/reporters'],
@@ -20,6 +22,7 @@ setup(
         "Operating System :: OS Independent",
         "Programming Language :: Python :: Implementation :: CPython",
         "Programming Language :: Python :: Implementation :: PyPy",
+        "Programming Language :: Python :: 2.6",
         "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3.2",
         "Topic :: Software Development :: Testing",
