@@ -1,3 +1,7 @@
+from .decorators import repeats
+
+
+@repeats(10)
 class BenchmarkCase(object):
     @classmethod
     def setUpClass(cls):

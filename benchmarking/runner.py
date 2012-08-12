@@ -9,9 +9,8 @@ from .util import _no_data, range, class_from_instancemethod
 
 
 class BenchmarkRunner(object):
-    def __init__(self, reporter, repeats=10, disable_gc=False):
+    def __init__(self, reporter, disable_gc=True):
         self.reporter = reporter
-        self.repeats = repeats
         self.disable_gc = disable_gc
         self.timer_func = time.time
 
@@ -66,7 +65,7 @@ class BenchmarkRunner(object):
         Runs instance's method with data. Handles setUp, tearDown. Delegates to run_repeat.
         """
 
-        repeats = _get_metainfo(method, 'repeats') or self.repeats
+        repeats = _get_metainfo(method, 'repeats')
 
         project_and_benchmark = self._project_and_benchmark(method)
 
