@@ -11,6 +11,7 @@ __all__ = ['BenchmarkCase',
 
 version = '0.2.dev'
 
+
 def main(reporter=None, classes=None):
     """
     Use it like this:

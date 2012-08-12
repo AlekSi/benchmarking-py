@@ -1,5 +1,8 @@
 import sys
 
+is_py3k = sys.version_info[0] == 3
+range = range if is_py3k else xrange
+
 
 class NoData(object):
     def __repr__(self):
@@ -7,9 +10,6 @@ class NoData(object):
 
 
 _no_data = NoData()
-
-
-range = xrange if sys.version_info[0] < 3 else range
 
 
 def class_from_instancemethod(instancemethod):

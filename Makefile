@@ -13,11 +13,11 @@ envs:
 	mkdir -p .download_cache
 	for e in env_26 env_27 env_32 env_pypy; \
 	do \
-		$$e/bin/pip install --download-cache=.download_cache codespeed-client coverage pyflakes pep8 Sphinx; \
+		$$e/bin/pip install --download-cache=.download_cache codespeed-client coverage pep8 Sphinx; \
 	done
 	for e in env_26 env_27 env_pypy; \
 	do \
-		$$e/bin/pip install --download-cache=.download_cache Twisted unittest2; \
+		$$e/bin/pip install --download-cache=.download_cache pyflakes Twisted unittest2; \
 	done
 
 test_all:
@@ -37,6 +37,8 @@ coverage:
 	coverage run --source=benchmarking -m unittest discover -v
 	coverage html --omit='*/test/*.py' -d coverage_html
 	coverage report -m --omit='*/test/*.py'
+
+style: flakes pep8
 
 flakes:
 	-pyflakes benchmarking examples

@@ -1,13 +1,15 @@
 from __future__ import division, absolute_import
 
-from twisted.internet import defer, reactor
 import unittest
 
 from ..decorators import calls, seconds, deferred, TimeoutError, ReactorError
+from ..util import is_py3k
+
+if not is_py3k:
+    from twisted.internet import defer, reactor
 
 
-class DecoratorTestCase(unittest.TestCase):
-
+class DecoratorsTestCase(unittest.TestCase):
     def test_calls(self):
         res = {'n': 0}
 
@@ -32,6 +34,8 @@ class DecoratorTestCase(unittest.TestCase):
         self.assertTrue(1 < calls < 15)
         self.assertEqual(calls, res['n'])
 
+
+class DecoratorsTwistedTestCase(unittest.TestCase):
     def test_deferred_syncronous_result(self):
         @deferred
         def simple_result():
@@ -62,3 +66,6 @@ class DecoratorTestCase(unittest.TestCase):
             return defer.succeed(1)
 
         self.assertRaises(ReactorError, unclean)
+
+if is_py3k:
+    DecoratorsTwistedTestCase = unittest.skip("Python 3 is not supported by Twisted")(DecoratorsTwistedTestCase)

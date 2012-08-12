@@ -1,13 +1,15 @@
 from __future__ import division, absolute_import
 
-from twisted.internet import defer, reactor
 import unittest
 
 from ..decorators import calls, seconds, repeats, data, data_function, deferred_data_function, deferred, TimeoutError
 from ..runner import BenchmarkRunner
 from ..case import BenchmarkCase
 from ..reporters import Reporter
-from ..util import _no_data
+from ..util import _no_data, is_py3k
+
+if not is_py3k:
+    from twisted.internet import defer, reactor
 
 
 def count(obj, key, inc=1):
@@ -81,29 +83,6 @@ class RunnerTestCase(unittest.TestCase):
 
         self.assertRaises(RuntimeError, self.runner.run_repeat, func, _no_data)
 
-    def test_run_repeat_errback_sync(self):
-        @deferred
-        def func():
-            return defer.fail(RuntimeError())
-
-        self.assertRaises(RuntimeError, self.runner.run_repeat, func, _no_data)
-
-    def test_run_repeat_errback(self):
-        @deferred
-        def func():
-            d = defer.Deferred()
-            reactor.callLater(0, d.errback, RuntimeError())
-            return d
-
-        self.assertRaises(RuntimeError, self.runner.run_repeat, func, _no_data)
-
-    def test_run_repeat_timeout(self):
-        @deferred(max_seconds=0.5)
-        def func():
-            return defer.Deferred()
-
-        self.assertRaises(TimeoutError, self.runner.run_repeat, func, _no_data)
-
     def test_run_instance_method_1(self):
         instance = RunnerBenchmarkCase()
         self.runner.run_instance_method(instance, instance.benchmark_1)
@@ -137,17 +116,6 @@ class RunnerTestCase(unittest.TestCase):
         self.assertFalse(hasattr(instance, 'count_benchmark_4'))
         self.assertFalse(hasattr(instance, 'count_benchmark_5'))
 
-    def test_run_instance_method_4(self):
-        instance = RunnerBenchmarkCase()
-        self.runner.run_instance_method(instance, instance.benchmark_4)
-        self.assertEqual(15, instance.count_instance_up)
-        self.assertEqual(15, instance.count_instance_down)
-        self.assertFalse(hasattr(instance, 'count_benchmark_1'))
-        self.assertFalse(hasattr(instance, 'count_benchmark_2'))
-        self.assertFalse(hasattr(instance, 'count_benchmark_3'))
-        self.assertEqual(120, instance.count_benchmark_4)
-        self.assertFalse(hasattr(instance, 'count_benchmark_5'))
-
     def test_run_instance_method_5(self):
         instance = RunnerBenchmarkCase()
         self.runner.run_instance_method(instance, instance.benchmark_5)
@@ -158,6 +126,45 @@ class RunnerTestCase(unittest.TestCase):
         self.assertFalse(hasattr(instance, 'count_benchmark_3'))
         self.assertFalse(hasattr(instance, 'count_benchmark_4'))
         self.assertTrue(instance.count_benchmark_5)
+
+
+class RunnerTwistedTestCase(unittest.TestCase):
+    def setUp(self):
+        self.runner = BenchmarkRunner(reporter=Reporter())
+
+    def test_run_repeat_errback_sync(self):
+        @deferred
+        def func():
+            return defer.fail(RuntimeError())
+
+        self.assertRaises(RuntimeError, self.runner.run_repeat, func, _no_data)
+
+    def test_run_repeat_errback(self):
+        @deferred
+        def func():
+            d = defer.Deferred()
+            reactor.callLater(0, d.errback, RuntimeError())
+            return d
+
+        self.assertRaises(RuntimeError, self.runner.run_repeat, func, _no_data)
+
+    def test_run_repeat_timeout(self):
+        @deferred(max_seconds=0.5)
+        def func():
+            return defer.Deferred()
+
+        self.assertRaises(TimeoutError, self.runner.run_repeat, func, _no_data)
+
+    def test_run_instance_method_4(self):
+        instance = RunnerBenchmarkCase()
+        self.runner.run_instance_method(instance, instance.benchmark_4)
+        self.assertEqual(15, instance.count_instance_up)
+        self.assertEqual(15, instance.count_instance_down)
+        self.assertFalse(hasattr(instance, 'count_benchmark_1'))
+        self.assertFalse(hasattr(instance, 'count_benchmark_2'))
+        self.assertFalse(hasattr(instance, 'count_benchmark_3'))
+        self.assertEqual(120, instance.count_benchmark_4)
+        self.assertFalse(hasattr(instance, 'count_benchmark_5'))
 
     def test_run(self):
         self.runner.run([RunnerBenchmarkCase])
@@ -170,3 +177,6 @@ class RunnerTestCase(unittest.TestCase):
         self.assertFalse(hasattr(RunnerBenchmarkCase, 'count_benchmark_3'))
         self.assertFalse(hasattr(RunnerBenchmarkCase, 'count_benchmark_4'))
         self.assertFalse(hasattr(RunnerBenchmarkCase, 'count_benchmark_5'))
+
+if is_py3k:
+    RunnerTwistedTestCase = unittest.skip("Python 3 is not supported by Twisted")(RunnerTwistedTestCase)
