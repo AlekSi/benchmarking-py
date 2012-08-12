@@ -57,9 +57,9 @@ class DecoratorTestCase(unittest.TestCase):
         self.assertRaises(TimeoutError, never_returns)
 
     def test_deferred_unclean_reactor(self):
-        @deferred(max_seconds=0.1)
+        @deferred
         def unclean():
             reactor.callLater(10000, lambda: None)
-            return defer.Deferred()
+            return defer.succeed(1)
 
         self.assertRaises(ReactorError, unclean)
