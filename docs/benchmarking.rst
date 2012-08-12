@@ -49,14 +49,6 @@ benchmarking Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`util` Module
-------------------
-
-.. automodule:: benchmarking.util
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 Subpackages
 -----------
 
